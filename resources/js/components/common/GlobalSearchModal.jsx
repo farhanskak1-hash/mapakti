@@ -57,21 +57,15 @@ export const GlobalSearchModal = () => {
       .filter((m) => m.isPublished && (m.name.toLowerCase().includes(q) || m.nia.toLowerCase().includes(q) || m.specializationDivision.toLowerCase().includes(q)))
       .map((m) => ({ type: 'anggota', title: m.name, sub: `NIA: ${m.nia} • ${m.specializationDivision}`, item: m, icon: Users }));
 
-    // 7. Alumni (HANYA YANG PUBLISHED SESUAI FR-13 & FR-17)
-    const matchingAlumni = alumni
-      .filter((al) => al.isPublished && (al.name.toLowerCase().includes(q) || al.currentCareer.toLowerCase().includes(q)))
-      .map((al) => ({ type: 'alumni', title: al.name, sub: `${al.batchNumber} • ${al.currentCareer}`, item: al, icon: Users }));
-
     return [
       ...matchingNews,
       ...matchingActivities,
       ...matchingDivisions,
       ...matchingAchievements,
       ...matchingGallery,
-      ...matchingMembers,
-      ...matchingAlumni
+      ...matchingMembers
     ];
-  }, [query, news, activities, divisions, achievements, gallery, members, alumni]);
+  }, [query, news, activities, divisions, achievements, gallery, members]);
 
   if (!searchModalOpen) return null;
 
@@ -91,8 +85,6 @@ export const GlobalSearchModal = () => {
       setLightboxImage(result.item);
     } else if (result.type === 'anggota') {
       setSelectedMember(result.item);
-    } else if (result.type === 'alumni') {
-      setCurrentSection('alumni');
     }
   };
 

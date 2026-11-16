@@ -86,7 +86,7 @@ export const Header = () => {
   const isProfileActive = ['profil', 'profile', 'kepengurusan', 'management', 'anggota', 'members'].includes(currentSection);
   const isExplorationActive = ['divisi', 'divisions', 'proker', 'programs', 'kegiatan', 'activities'].includes(currentSection);
   const isPublicationActive = ['berita', 'news', 'galeri', 'gallery', 'diklatsar'].includes(currentSection);
-  const isAchievementsActive = ['prestasi', 'achievements', 'alumni'].includes(currentSection);
+  const isAchievementsActive = ['prestasi', 'achievements'].includes(currentSection);
 
   return (
     <header className="sticky top-0 z-40 w-full shadow-xl">
@@ -401,70 +401,20 @@ export const Header = () => {
               )}
             </div>
 
-            {/* Dropdown: Prestasi & Alumni */}
-            <div
-              className="relative"
-              onMouseEnter={() => handleMouseEnter('prestasi-alumni')}
-              onMouseLeave={handleMouseLeave}
+            {/* Prestasi Direct Link */}
+            <button
+              onClick={() => navigateTo('prestasi')}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all relative group ${
+                isAchievementsActive
+                  ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
+                  : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
+              }`}
             >
-              <button
-                onClick={() => navigateTo('prestasi')}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all relative group ${
-                  isAchievementsActive
-                    ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
-                    : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
-                }`}
-              >
-                <span>Prestasi & Alumni</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    activeDropdown === 'prestasi-alumni' ? 'rotate-180 text-[#F5C400]' : 'text-slate-300'
-                  }`}
-                />
-                {isAchievementsActive && (
-                  <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
-                )}
-              </button>
-
-              {activeDropdown === 'prestasi-alumni' && (
-                <div
-                  className="absolute top-full left-0 w-64 py-2 mt-1 bg-[#0b1424] border border-[#F5C400]/30 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150 z-50 divide-y divide-slate-800/60"
-                  onMouseEnter={() => handleMouseEnter('prestasi-alumni')}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  <div className="py-1">
-                    <button
-                      onClick={() => navigateTo('prestasi')}
-                      className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
-                        currentSection === 'prestasi' || currentSection === 'achievements'
-                          ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
-                          : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
-                      }`}
-                    >
-                      <Trophy className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-bold">Rekor Prestasi</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Kejuaraan & apresiasi</div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => navigateTo('alumni')}
-                      className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
-                        currentSection === 'alumni'
-                          ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
-                          : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
-                      }`}
-                    >
-                      <GraduationCap className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-bold">Direktori Alumni</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Jejaring alumni MAPAKTI</div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
+              <span>Prestasi</span>
+              {isAchievementsActive && (
+                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
               )}
-            </div>
+            </button>
 
             {/* Kontak */}
             <button
@@ -653,24 +603,13 @@ export const Header = () => {
                 </button>
                 <button
                   onClick={() => navigateTo('prestasi')}
-                  className={`p-3 text-left rounded-xl transition-all flex items-center justify-between ${
+                  className={`p-3 text-left rounded-xl transition-all flex items-center justify-between col-span-2 ${
                     currentSection === 'prestasi' || currentSection === 'achievements'
                       ? 'bg-[#102A56] text-[#F5C400] ring-1 ring-[#F5C400]/40'
                       : 'bg-slate-900/90 text-white hover:text-[#F5C400] hover:bg-slate-800'
                   }`}
                 >
-                  <span>Prestasi</span>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
-                </button>
-                <button
-                  onClick={() => navigateTo('alumni')}
-                  className={`p-3 text-left rounded-xl transition-all flex items-center justify-between col-span-2 ${
-                    currentSection === 'alumni'
-                      ? 'bg-[#102A56] text-[#F5C400] ring-1 ring-[#F5C400]/40'
-                      : 'bg-slate-900/90 text-white hover:text-[#F5C400] hover:bg-slate-800'
-                  }`}
-                >
-                  <span>Direktori Alumni</span>
+                  <span>Rekor Prestasi</span>
                   <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
                 </button>
               </div>

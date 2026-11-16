@@ -142,11 +142,6 @@ export const Footer = () => {
                   Rekor Prestasi & Penghargaan
                 </button>
               </li>
-              <li>
-                <button onClick={() => navTo('alumni')} className="hover:text-[#F5C400] transition-colors">
-                  Direktori Alumni Terdaftar
-                </button>
-              </li>
             </ul>
           </div>
 

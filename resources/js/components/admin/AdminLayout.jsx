@@ -38,7 +38,6 @@ import { AdminNews } from './AdminNews';
 import { AdminGallery } from './AdminGallery';
 import { AdminDiklatsar } from './AdminDiklatsar';
 import { AdminAchievements } from './AdminAchievements';
-import { AdminAlumni } from './AdminAlumni';
 import { AdminSettings } from './AdminSettings';
 import { AdminAuditLogs } from './AdminAuditLogs';
 
@@ -75,8 +74,7 @@ export const AdminLayout = () => {
     { id: 'galeri', label: 'Galeri Foto', icon: ImageIcon },
     { id: 'diklatsar', label: 'Sejarah DIKLATSAR', icon: Award },
     { id: 'prestasi', label: 'Rekor Prestasi', icon: Award },
-    { id: 'alumni', label: 'Data Alumni', icon: GraduationCap },
-    { id: 'cms-seo', label: 'CMS, SEO & Cadangan Data', icon: Settings },
+    { id: 'cms-seo', label: 'Editor Tampilan Front-End & CMS', icon: Settings },
     { id: 'audit', label: 'Audit Log & Keamanan', icon: Lock }
   ];
 
@@ -303,7 +301,6 @@ export const AdminLayout = () => {
           {adminCurrentTab === 'galeri' && <AdminGallery />}
           {adminCurrentTab === 'diklatsar' && <AdminDiklatsar />}
           {adminCurrentTab === 'prestasi' && <AdminAchievements />}
-          {adminCurrentTab === 'alumni' && <AdminAlumni />}
           {adminCurrentTab === 'cms-seo' && <AdminSettings />}
           {adminCurrentTab === 'audit' && <AdminAuditLogs />}
         </main>

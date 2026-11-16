@@ -20,7 +20,6 @@ import { NewsSection } from './components/public/NewsSection';
 import { GallerySection } from './components/public/GallerySection';
 import { DiklatsarSection } from './components/public/DiklatsarSection';
 import { AchievementsSection } from './components/public/AchievementsSection';
-import { AlumniSection } from './components/public/AlumniSection';
 import { RegistrationSection } from './components/public/RegistrationSection';
 import { ContactSection } from './components/public/ContactSection';
 
@@ -70,8 +69,6 @@ const MainApp = () => {
       case 'achievements':
       case 'prestasi':
         return <AchievementsSection />;
-      case 'alumni':
-        return <AlumniSection />;
       case 'registration':
       case 'daftar-anggota':
         return <RegistrationSection />;
