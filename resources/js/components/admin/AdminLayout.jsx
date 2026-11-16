@@ -186,7 +186,7 @@ export const AdminLayout = () => {
               </div>
               <div className="truncate">
                 <div className="text-xs font-bold text-white truncate">Administrator</div>
-                <div className="text-[10px] text-slate-500 truncate">admin@mapakti.or.id</div>
+                <div className="text-[10px] text-slate-500 truncate">admin@mapakti.tegal</div>
               </div>
             </div>
 

@@ -761,7 +761,7 @@ export const initialAuditLogs = [
   {
     id: 'log-1',
     timestamp: '2024-11-16 09:30',
-    user: 'admin@mapakti.or.id',
+    user: 'admin@mapakti.tegal',
     action: 'CREATE',
     module: 'Kegiatan & Ekspedisi',
     details: 'Menambahkan kegiatan baru "Ekspedisi Atap Jawa Tengah: Gunung Slamet 3.428 MDPL"'
@@ -769,7 +769,7 @@ export const initialAuditLogs = [
   {
     id: 'log-2',
     timestamp: '2024-11-15 14:15',
-    user: 'admin@mapakti.or.id',
+    user: 'admin@mapakti.tegal',
     action: 'UPDATE',
     module: 'Pendaftaran Anggota',
     details: 'Memverifikasi calon pendaftar atas nama Rizka Nur Azizah (NIM: 642410098)'
@@ -777,7 +777,7 @@ export const initialAuditLogs = [
   {
     id: 'log-3',
     timestamp: '2024-11-14 16:40',
-    user: 'admin@mapakti.or.id',
+    user: 'admin@mapakti.tegal',
     action: 'PUBLISH',
     module: 'Berita & Publikasi',
     details: 'Menerbitkan berita "Pendaftaran DIKLATSAR Calon Anggota Baru Gelombang I"'
@@ -785,7 +785,7 @@ export const initialAuditLogs = [
   {
     id: 'log-4',
     timestamp: '2024-11-12 11:20',
-    user: 'admin@mapakti.or.id',
+    user: 'admin@mapakti.tegal',
     action: 'PRIVACY_TOGGLE',
     module: 'Data Anggota',
     details: 'Mengubah izin publikasi anggota Fahrur Rozi menjadi PRIVAT'

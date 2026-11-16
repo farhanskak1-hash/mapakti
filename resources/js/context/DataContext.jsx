@@ -147,7 +147,7 @@ export const DataProvider = ({ children }) => {
     const newLog = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
-      user: 'admin@mapakti.or.id',
+      user: 'admin@mapakti.tegal',
       action,
       module,
       details
@@ -157,7 +157,7 @@ export const DataProvider = ({ children }) => {
 
   // Admin Authentication handlers (FR-20)
   const loginAdmin = (email, password) => {
-    if (email === 'admin@mapakti.or.id' && password === 'admin123') {
+    if (email === 'admin@mapakti.tegal' && password === 'MAPAKTI17JULI') {
       setIsAdminAuthenticated(true);
       localStorage.setItem('mapakti_admin_auth', 'true');
       setIsAdminMode(true);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
-import { ShieldCheck, Lock, Mail, X, KeyRound, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, X, AlertTriangle } from 'lucide-react';
 import { Logo } from './Logo';
 
 export const AdminLoginModal = () => {
@@ -16,14 +16,8 @@ export const AdminLoginModal = () => {
     setErrorMsg('');
     const success = loginAdmin(email, password);
     if (!success) {
-      setErrorMsg('Email atau password tidak sesuai. Coba gunakan akun demo.');
+      setErrorMsg('Email atau kata sandi tidak sesuai. Silakan periksa kembali.');
     }
-  };
-
-  const handleFillDemo = () => {
-    setEmail('admin@mapakti.or.id');
-    setPassword('admin123');
-    setErrorMsg('');
   };
 
   return (
@@ -72,7 +66,7 @@ export const AdminLoginModal = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@mapakti.or.id"
+                placeholder="admin@mapakti.tegal"
                 className="w-full bg-slate-950 border border-slate-700 focus:border-[#F5C400] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
               />
             </div>
@@ -93,24 +87,6 @@ export const AdminLoginModal = () => {
                 className="w-full bg-slate-950 border border-slate-700 focus:border-[#F5C400] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
               />
             </div>
-          </div>
-
-          {/* Demo Account Helper */}
-          <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="font-semibold text-slate-300 flex items-center gap-1">
-                <KeyRound className="w-3 h-3 text-[#F5C400]" />
-                <span>Akun Uji Demo:</span>
-              </div>
-              <div>admin@mapakti.or.id / admin123</div>
-            </div>
-            <button
-              type="button"
-              onClick={handleFillDemo}
-              className="text-[#F5C400] hover:underline font-bold px-2 py-1 rounded bg-[#102A56]/60 border border-[#F5C400]/30 hover:bg-[#102A56] transition-colors"
-            >
-              Isi Otomatis
-            </button>
           </div>
 
           {/* Submit */}
