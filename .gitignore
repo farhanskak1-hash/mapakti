@@ -1,0 +1,69 @@
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+.phpactor.json
+.phpunit.result.cache
+/.codex
+/.cursor/
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/dist
+/.vercel
+/public/build
+/public/fonts-manifest.dev.json
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+_ide_helper.php
+Homestead.json
+Homestead.yaml
+Thumbs.db
+
+# Archives & Temporary Uploads
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+*.bak
+*.backup
+
+# Sensitive Credentials & Keys
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.credentials
+
+# Internal Requirements & Documents
+PRD*
+*.docx
+*.pdf
+PRD Desain Web.txt
+
+# Local Batch / Shell Scripts
+*.bat
+*.cmd
+
+# Local Agent / AI Configs
+.claude/
+CLAUDE.md
+AGENTS.md
+boost.json
+.mcp.json
+
+# Local Database & Exports
+*.sqlite*
+*.sql
+*.xlsx
+*.csv

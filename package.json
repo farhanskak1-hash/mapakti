@@ -1,0 +1,29 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "build:vercel": "vite build --mode spa",
+        "build:spa": "vite build --mode spa"
+    },
+    "dependencies": {
+        "autoprefixer": "^10.6.2",
+        "lucide-react": "^1.55.0",
+        "postcss": "^8.5.33",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "xlsx": "^0.18.5"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-react": "^4.3.4",
+        "concurrently": "^10.0.3",
+        "laravel-vite-plugin": "^1.2.0",
+        "tailwindcss": "^3.4.17",
+        "vite": "^6.2.0"
+    },
+    "optionalDependencies": {
+        "@laravel/multiplex": "^0.4.1"
+    }
+}
