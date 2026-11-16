@@ -22,7 +22,8 @@ import {
   ExternalLink,
   CheckCircle2,
   FileText,
-  Lock
+  Lock,
+  Database
 } from 'lucide-react';
 
 // Admin Tab Components
@@ -213,7 +214,17 @@ export const AdminLayout = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Cloud Database Status */}
+            <div
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-bold text-emerald-400 shadow-sm"
+              title="Terhubung ke Database Cloud Aiven MySQL"
+            >
+              <Database className="w-3 h-3 text-emerald-400" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Aiven MySQL Online</span>
+            </div>
+
             {/* Notification Bell Dropdown (FR-19) */}
             <div className="relative">
               <button

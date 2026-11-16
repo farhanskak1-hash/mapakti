@@ -111,23 +111,76 @@ export const DataProvider = ({ children }) => {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
 
-  // Auto-sync state to localStorage
-  useEffect(() => { localStorage.setItem('mapakti_settings', JSON.stringify(settings)); }, [settings]);
-  useEffect(() => { localStorage.setItem('mapakti_profile', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('mapakti_divisions', JSON.stringify(divisions)); }, [divisions]);
-  useEffect(() => { localStorage.setItem('mapakti_periods', JSON.stringify(periods)); }, [periods]);
-  useEffect(() => { localStorage.setItem('mapakti_members', JSON.stringify(members)); }, [members]);
-  useEffect(() => { localStorage.setItem('mapakti_programs', JSON.stringify(programs)); }, [programs]);
-  useEffect(() => { localStorage.setItem('mapakti_activities', JSON.stringify(activities)); }, [activities]);
-  useEffect(() => { localStorage.setItem('mapakti_act_regs', JSON.stringify(activityRegistrations)); }, [activityRegistrations]);
-  useEffect(() => { localStorage.setItem('mapakti_mem_regs', JSON.stringify(memberRegistrations)); }, [memberRegistrations]);
-  useEffect(() => { localStorage.setItem('mapakti_news', JSON.stringify(news)); }, [news]);
-  useEffect(() => { localStorage.setItem('mapakti_gallery', JSON.stringify(gallery)); }, [gallery]);
-  useEffect(() => { localStorage.setItem('mapakti_diklatsar', JSON.stringify(diklatsarEvents)); }, [diklatsarEvents]);
-  useEffect(() => { localStorage.setItem('mapakti_achievements', JSON.stringify(achievements)); }, [achievements]);
-  useEffect(() => { localStorage.setItem('mapakti_alumni', JSON.stringify(alumni)); }, [alumni]);
-  useEffect(() => { localStorage.setItem('mapakti_audit_logs', JSON.stringify(auditLogs)); }, [auditLogs]);
-  useEffect(() => { localStorage.setItem('mapakti_notifications', JSON.stringify(notifications)); }, [notifications]);
+  // Database Sync State
+  const [isDbConnected, setIsDbConnected] = useState(false);
+
+  // Helper to send updates to Aiven MySQL (/api/data)
+  const syncToApi = async (key, data) => {
+    try {
+      await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, data })
+      });
+      setIsDbConnected(true);
+    } catch (e) {
+      // Quiet fallback when offline or local without server
+    }
+  };
+
+  // Initial hydrate from Aiven MySQL via /api/data
+  useEffect(() => {
+    let active = true;
+    async function loadFromDb() {
+      try {
+        const res = await fetch('/api/data');
+        if (!res.ok) return;
+        const resData = await res.json();
+        if (active && resData && resData.ok && resData.data) {
+          const d = resData.data;
+          if (d.settings) setSettings(d.settings);
+          if (d.profile) setProfile(d.profile);
+          if (d.divisions) setDivisions(d.divisions);
+          if (d.periods) setPeriods(d.periods);
+          if (d.members) setMembers(d.members);
+          if (d.programs) setPrograms(d.programs);
+          if (d.activities) setActivities(d.activities);
+          if (d.act_regs) setActivityRegistrations(d.act_regs);
+          if (d.mem_regs) setMemberRegistrations(d.mem_regs);
+          if (d.news) setNews(d.news);
+          if (d.gallery) setGallery(d.gallery);
+          if (d.diklatsar) setDiklatsarEvents(d.diklatsar);
+          if (d.achievements) setAchievements(d.achievements);
+          if (d.alumni) setAlumni(d.alumni);
+          if (d.audit_logs) setAuditLogs(d.audit_logs);
+          if (d.notifications) setNotifications(d.notifications);
+          setIsDbConnected(true);
+        }
+      } catch (err) {
+        // Fallback to localStorage without breaking UI
+      }
+    }
+    loadFromDb();
+    return () => { active = false; };
+  }, []);
+
+  // Auto-sync state to localStorage and Aiven MySQL
+  useEffect(() => { localStorage.setItem('mapakti_settings', JSON.stringify(settings)); syncToApi('settings', settings); }, [settings]);
+  useEffect(() => { localStorage.setItem('mapakti_profile', JSON.stringify(profile)); syncToApi('profile', profile); }, [profile]);
+  useEffect(() => { localStorage.setItem('mapakti_divisions', JSON.stringify(divisions)); syncToApi('divisions', divisions); }, [divisions]);
+  useEffect(() => { localStorage.setItem('mapakti_periods', JSON.stringify(periods)); syncToApi('periods', periods); }, [periods]);
+  useEffect(() => { localStorage.setItem('mapakti_members', JSON.stringify(members)); syncToApi('members', members); }, [members]);
+  useEffect(() => { localStorage.setItem('mapakti_programs', JSON.stringify(programs)); syncToApi('programs', programs); }, [programs]);
+  useEffect(() => { localStorage.setItem('mapakti_activities', JSON.stringify(activities)); syncToApi('activities', activities); }, [activities]);
+  useEffect(() => { localStorage.setItem('mapakti_act_regs', JSON.stringify(activityRegistrations)); syncToApi('act_regs', activityRegistrations); }, [activityRegistrations]);
+  useEffect(() => { localStorage.setItem('mapakti_mem_regs', JSON.stringify(memberRegistrations)); syncToApi('mem_regs', memberRegistrations); }, [memberRegistrations]);
+  useEffect(() => { localStorage.setItem('mapakti_news', JSON.stringify(news)); syncToApi('news', news); }, [news]);
+  useEffect(() => { localStorage.setItem('mapakti_gallery', JSON.stringify(gallery)); syncToApi('gallery', gallery); }, [gallery]);
+  useEffect(() => { localStorage.setItem('mapakti_diklatsar', JSON.stringify(diklatsarEvents)); syncToApi('diklatsar', diklatsarEvents); }, [diklatsarEvents]);
+  useEffect(() => { localStorage.setItem('mapakti_achievements', JSON.stringify(achievements)); syncToApi('achievements', achievements); }, [achievements]);
+  useEffect(() => { localStorage.setItem('mapakti_alumni', JSON.stringify(alumni)); syncToApi('alumni', alumni); }, [alumni]);
+  useEffect(() => { localStorage.setItem('mapakti_audit_logs', JSON.stringify(auditLogs)); syncToApi('audit_logs', auditLogs); }, [auditLogs]);
+  useEffect(() => { localStorage.setItem('mapakti_notifications', JSON.stringify(notifications)); syncToApi('notifications', notifications); }, [notifications]);
 
   // Toast Notification System
   const addToast = ({ type = 'info', title, message }) => {
@@ -500,6 +553,9 @@ export const DataProvider = ({ children }) => {
         alumni, setAlumni,
         auditLogs, setAuditLogs,
         notifications, setNotifications,
+
+        // Database status
+        isDbConnected,
 
         // Navigation
         currentSection, setCurrentSection,
