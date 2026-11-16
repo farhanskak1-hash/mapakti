@@ -16,7 +16,8 @@ import {
   ShieldCheck,
   Newspaper,
   Image as ImageIcon,
-  UserPlus
+  UserPlus,
+  Heart
 } from 'lucide-react';
 
 export const HomeSection = () => {
@@ -203,56 +204,116 @@ export const HomeSection = () => {
         </div>
       </section>
 
-      {/* 3. SAMBUTAN KETUA UMUM & PROFIL SINGKAT (FR-01) */}
+      {/* 3. KODE ETIK PENCINTA ALAM INDONESIA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center p-6 sm:p-10 rounded-3xl bg-slate-900/60 border border-slate-800">
-          {/* Photo Card */}
-          <div className="lg:col-span-4 flex justify-center">
-            <div className="relative group">
-              <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-[#F5C400] to-[#102A56] opacity-30 blur-lg group-hover:opacity-50 transition-opacity" />
-              <div className="relative w-64 sm:w-72 aspect-[4/5] rounded-2xl overflow-hidden border-2 border-[#F5C400]/60 shadow-2xl bg-slate-950">
-                <img
-                  src={settings.chairmanPhotoUrl}
-                  alt={settings.chairmanName}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-center">
-                  <div className="text-sm font-black text-white">{settings.chairmanName}</div>
-                  <div className="text-[11px] text-[#F5C400] font-mono">{settings.chairmanNia}</div>
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#0c192e] via-[#0f223f] to-[#080d17] border border-[#F5C400]/40 p-6 sm:p-10 shadow-2xl space-y-8">
+          {/* Subtle Decorative Elements */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#F5C400]/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#102A56]/40 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Section Header */}
+          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#102A56] border border-[#F5C400]/40 text-[#F5C400] text-xs font-black uppercase tracking-wider">
+                <Heart className="w-3.5 h-3.5 text-[#F5C400]" />
+                <span>Ikrar Luhur Rimbawan</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black text-white leading-tight tracking-tight">
+                KODE ETIK PENCINTA ALAM INDONESIA
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Landasan moral, pedoman etika, dan kompas integritas yang dijunjung tinggi oleh setiap insan rimbawan MAPAKTI Universitas Pancasakti Tegal.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start md:self-auto">
+              <span className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-bold text-slate-400">
+                Konsensus Glagah Arum 1974
+              </span>
+              <button
+                onClick={() => { setCurrentSection('profil'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="px-4 py-2 rounded-xl bg-[#F5C400] hover:bg-[#e6b800] text-[#102A56] font-bold text-xs transition-all shadow-md flex items-center gap-1.5"
+              >
+                <span>Visi & Profil Lengkap</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* 3 Kesadaran Pokok (Three Core Consciousness) */}
+          <div className="relative space-y-3">
+            <div className="text-xs font-bold text-[#F5C400] uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Tiga Kesadaran Pokok Pencinta Alam</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 hover:border-[#F5C400]/40 transition-all flex flex-col justify-between space-y-3">
+                <div className="w-7 h-7 rounded-xl bg-[#102A56] border border-[#F5C400]/30 text-[#F5C400] font-black text-xs flex items-center justify-center">
+                  1
+                </div>
+                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed italic">
+                  "Pencinta Alam Indonesia sadar bahwa alam beserta isinya adalah ciptaan Tuhan Yang Maha Esa."
+                </p>
+                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pt-2 border-t border-slate-800">
+                  Ketuhanan & Keagungan Alam
+                </div>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 hover:border-[#F5C400]/40 transition-all flex flex-col justify-between space-y-3">
+                <div className="w-7 h-7 rounded-xl bg-[#102A56] border border-[#F5C400]/30 text-[#F5C400] font-black text-xs flex items-center justify-center">
+                  2
+                </div>
+                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed italic">
+                  "Pencinta Alam Indonesia sebagai bagian dari masyarakat Indonesia sadar akan tanggung jawab kepada Tuhan, Bangsa, dan Tanah Air."
+                </p>
+                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pt-2 border-t border-slate-800">
+                  Tanggung Jawab Kebangsaan
+                </div>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 hover:border-[#F5C400]/40 transition-all flex flex-col justify-between space-y-3">
+                <div className="w-7 h-7 rounded-xl bg-[#102A56] border border-[#F5C400]/30 text-[#F5C400] font-black text-xs flex items-center justify-center">
+                  3
+                </div>
+                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed italic">
+                  "Pencinta Alam Indonesia sadar bahwa pecinta alam adalah sebagian dari upaya membina manusia Indonesia seutuhnya."
+                </p>
+                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pt-2 border-t border-slate-800">
+                  Pembinaan Karakter Luhur
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Greeting Text */}
-          <div className="lg:col-span-8 space-y-4">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#102A56] border border-[#F5C400]/40 text-[#F5C400] text-xs font-bold uppercase tracking-wider">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Sambutan Ketua Umum</span>
+          {/* Pernyataan Pengabdian (The Declaration Points) */}
+          <div className="relative p-5 sm:p-6 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-4">
+            <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#F5C400]" />
+              <span>Berdasarkan apa yang disadari, Pencinta Alam Indonesia Menyatakan:</span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">
-              Menempa Ksatria Rimba, Mengabdi untuk Kelestarian Semesta
-            </h2>
-
-            <blockquote className="text-sm sm:text-base text-slate-300 leading-relaxed italic bg-slate-950/60 p-5 rounded-2xl border-l-4 border-l-[#F5C400] border-y border-r border-slate-800">
-              "{settings.chairmanGreeting}"
-            </blockquote>
-
-            <div className="pt-2 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <div className="font-bold text-white text-sm">{settings.chairmanName}</div>
-                <div className="text-xs text-[#F5C400]">{settings.chairmanTitle}</div>
-              </div>
-
-              <button
-                onClick={() => { setCurrentSection('profil'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-[#102A56] text-white hover:text-[#F5C400] font-semibold text-xs border border-slate-700 transition-colors flex items-center gap-2"
-              >
-                <span>Pelajari Sejarah & Visi Lengkap</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                { no: '1', text: 'Mengabdi kepada Tuhan Yang Maha Esa.' },
+                { no: '2', text: 'Memelihara alam beserta isinya serta menggunakan sumber daya alam sesuai dengan batas kemampuannya.' },
+                { no: '3', text: 'Mengabdi kepada Bangsa dan Tanah Air.' },
+                { no: '4', text: 'Menghormati tata kehidupan yang berlaku pada masyarakat sekitar serta menghargai manusia dengan keragamannya.' },
+                { no: '5', text: 'Berusaha mempererat tali persaudaraan antara sesama pecinta alam sesuai dengan asas pecinta alam.' },
+                { no: '6', text: 'Berusaha saling membantu serta saling menghargai dalam pelaksanaan pengabdian terhadap Tuhan, Bangsa, dan Tanah Air.' }
+              ].map((item) => (
+                <div
+                  key={item.no}
+                  className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800/90 flex items-start gap-3 hover:border-slate-700 transition-colors"
+                >
+                  <span className="w-6 h-6 rounded-lg bg-[#102A56] text-[#F5C400] font-bold text-xs flex items-center justify-center flex-shrink-0 mt-0.5">
+                    {item.no}
+                  </span>
+                  <span className="text-xs text-slate-300 leading-relaxed font-medium">
+                    {item.text}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
