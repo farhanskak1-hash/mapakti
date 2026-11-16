@@ -64,7 +64,7 @@ export const AdminLayout = () => {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard Analitik', icon: LayoutDashboard },
-    { id: 'pendaftaran-anggota', label: 'Pendaftaran Anggota', icon: UserPlus, badge: pendingRegistrationsCount },
+    { id: 'pendaftaran-anggota', label: 'Pendaftaran (GForm & CP)', icon: UserPlus, badge: settings.registrationIsOpen !== false ? 'Aktif' : 'Tutup' },
     { id: 'anggota', label: 'Master Data Anggota', icon: Users },
     { id: 'periode', label: 'Kepengurusan & Periode', icon: ShieldCheck },
     { id: 'divisi', label: 'Informasi 3 Divisi', icon: Compass },

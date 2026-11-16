@@ -62,6 +62,36 @@ export const initialSiteSettings = {
     darkBase: '#171717'
   },
 
+  // Pendaftaran Calon Anggota (Google Form & Narahubung)
+  registrationIsOpen: true,
+  registrationTitle: 'Pendaftaran Calon Anggota & DIKLATSAR MAPAKTI',
+  registrationSubtitle: 'Terbuka bagi seluruh mahasiswa aktif Universitas Pancasakti Tegal yang bertekad menempa diri di kawah candradimuka pecinta alam.',
+  registrationGformUrl: 'https://forms.gle/mapakti-diklatsar-reg',
+  registrationGuideText: 'Silakan isi formulir online resmi melalui tautan Google Form di bawah ini, kemudian konfirmasikan ke salah satu kontak narahubung (Contact Person) panitia.',
+  registrationRequirements: [
+    'Mahasiswa aktif Universitas Pancasakti Tegal (Semua Fakultas/Program Studi)',
+    'Memiliki minat, komitmen, dan integritas tinggi terhadap pelestarian alam dan petualangan',
+    'Sehat jasmani dan rohani untuk kegiatan alam bebas',
+    'Mengisi formulir pendaftaran resmi melalui Google Form panitia',
+    'Mengikuti seluruh rangkaian pengarahan (Technical Meeting) dan DIKLATSAR'
+  ],
+  registrationContactPersons: [
+    {
+      id: 'cp-1',
+      name: 'Bayu Dirgantara',
+      role: 'Ketua Umum MAPAKTI',
+      phone: '085876543210',
+      whatsapp: '6285876543210'
+    },
+    {
+      id: 'cp-2',
+      name: 'Rian Setiawan',
+      role: 'Koordinator Pendaftaran & Diklat',
+      phone: '081234567890',
+      whatsapp: '6281234567890'
+    }
+  ],
+
   // SEO Settings (FR-18)
   metaTitle: 'MAPAKTI UPS Tegal — Mahasiswa Pencinta Alam Universitas Pancasakti Tegal',
   metaDescription: 'Website Resmi MAPAKTI Universitas Pancasakti Tegal. Pusat dokumentasi petualangan alam bebas, kegiatan konservasi, info DIKLATSAR, dan pendaftaran anggota baru.',

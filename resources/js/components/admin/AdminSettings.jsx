@@ -21,7 +21,9 @@ import {
   Upload,
   Layers,
   BarChart3,
-  ExternalLink
+  ExternalLink,
+  UserPlus,
+  MessageCircle
 } from 'lucide-react';
 
 export const AdminSettings = () => {
@@ -109,6 +111,46 @@ export const AdminSettings = () => {
     },
     footerCopyright: settings.footerCopyright || '© 1984 - 2026 MAPAKTI Universitas Pancasakti Tegal. All Rights Reserved.',
 
+    // Pendaftaran Calon Anggota (Google Form & Narahubung)
+    registrationIsOpen: settings.registrationIsOpen !== false,
+    registrationTitle: settings.registrationTitle || 'Pendaftaran Calon Anggota & DIKLATSAR MAPAKTI',
+    registrationSubtitle:
+      settings.registrationSubtitle ||
+      'Terbuka bagi seluruh mahasiswa aktif Universitas Pancasakti Tegal yang bertekad menempa diri di kawah candradimuka pecinta alam.',
+    registrationGformUrl: settings.registrationGformUrl || 'https://forms.gle/mapakti-diklatsar-reg',
+    registrationGuideText:
+      settings.registrationGuideText ||
+      'Silakan isi formulir online resmi melalui tautan Google Form di bawah ini, kemudian konfirmasikan ke salah satu kontak narahubung (Contact Person) panitia.',
+    registrationContactPersons:
+      settings.registrationContactPersons && settings.registrationContactPersons.length > 0
+        ? settings.registrationContactPersons
+        : [
+            {
+              id: 'cp-1',
+              name: 'Bayu Dirgantara',
+              role: 'Ketua Umum MAPAKTI',
+              phone: '085876543210',
+              whatsapp: '6285876543210'
+            },
+            {
+              id: 'cp-2',
+              name: 'Rian Setiawan',
+              role: 'Koordinator Pendaftaran & Diklat',
+              phone: '081234567890',
+              whatsapp: '6281234567890'
+            }
+          ],
+    registrationRequirements:
+      settings.registrationRequirements && settings.registrationRequirements.length > 0
+        ? settings.registrationRequirements
+        : [
+            'Mahasiswa aktif Universitas Pancasakti Tegal (Semua Fakultas & Program Studi)',
+            'Memiliki minat, integritas, dan komitmen tinggi terhadap kelestarian alam dan petualangan alam bebas',
+            'Sehat jasmani dan rohani untuk kegiatan lapangan',
+            'Mengisi formulir pendaftaran resmi melalui Google Form panitia',
+            'Mengikuti seluruh rangkaian pengarahan (Technical Meeting) dan Pendidikan & Latihan Dasar (DIKLATSAR)'
+          ],
+
     // SEO
     metaTitle: settings.metaTitle || 'MAPAKTI UPS Tegal — Mahasiswa Pencinta Alam Universitas Pancasakti Tegal',
     metaDescription: settings.metaDescription || 'Website Resmi MAPAKTI Universitas Pancasakti Tegal.',
@@ -175,6 +217,58 @@ export const AdminSettings = () => {
     setProfileData({ ...profileData, missions: updated });
   };
 
+  // Helper for Registration Contacts
+  const handleAddRegContact = () => {
+    const newCp = {
+      id: `cp-${Date.now()}`,
+      name: '',
+      role: 'Panitia Pendaftaran',
+      phone: '',
+      whatsapp: ''
+    };
+    setFormData((prev) => ({
+      ...prev,
+      registrationContactPersons: [...(prev.registrationContactPersons || []), newCp]
+    }));
+  };
+
+  const handleRegContactChange = (index, field, value) => {
+    const updated = [...(formData.registrationContactPersons || [])];
+    updated[index] = { ...updated[index], [field]: value };
+    if (field === 'phone' && !updated[index].whatsapp) {
+      updated[index].whatsapp = value.replace(/[^0-9]/g, '');
+    }
+    setFormData((prev) => ({ ...prev, registrationContactPersons: updated }));
+  };
+
+  const handleRemoveRegContact = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      registrationContactPersons: (prev.registrationContactPersons || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  // Helper for Registration Requirements
+  const handleAddRegRequirement = () => {
+    setFormData((prev) => ({
+      ...prev,
+      registrationRequirements: [...(prev.registrationRequirements || []), '']
+    }));
+  };
+
+  const handleRegRequirementChange = (index, value) => {
+    const updated = [...(formData.registrationRequirements || [])];
+    updated[index] = value;
+    setFormData((prev) => ({ ...prev, registrationRequirements: updated }));
+  };
+
+  const handleRemoveRegRequirement = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      registrationRequirements: (prev.registrationRequirements || []).filter((_, i) => i !== index)
+    }));
+  };
+
   // Helper for Backup & Restore
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -229,9 +323,10 @@ export const AdminSettings = () => {
           { id: 'hero', label: '1. Beranda & Hero Slider', icon: Layers },
           { id: 'sambutan', label: '2. Sambutan Ketua Umum', icon: User },
           { id: 'profil', label: '3. Profil, Visi & Misi', icon: Heart },
-          { id: 'kontak', label: '4. Kontak & Footer', icon: Phone },
-          { id: 'seo', label: '5. SEO & Metadata', icon: Globe },
-          { id: 'database', label: '6. Cadangan & Cloud Aiven', icon: Database }
+          { id: 'pendaftaran', label: '4. Pendaftaran (GForm & Kontak)', icon: UserPlus },
+          { id: 'kontak', label: '5. Kontak & Footer', icon: Phone },
+          { id: 'seo', label: '6. SEO & Metadata', icon: Globe },
+          { id: 'database', label: '7. Cadangan & Cloud Aiven', icon: Database }
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -621,7 +716,221 @@ export const AdminSettings = () => {
         </div>
       )}
 
-      {/* TAB 4: KONTAK, MEDSOS & FOOTER */}
+      {/* TAB 4: PENDAFTARAN (GFORM & CONTACT PERSON) */}
+      {activeTab === 'pendaftaran' && (
+        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900 border border-slate-800 space-y-6">
+          <div className="border-b border-slate-800 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2 text-[#F5C400]">
+                <UserPlus className="w-4 h-4" />
+                Pengaturan Pendaftaran Calon Anggota (Google Form & Narahubung)
+              </h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Pendaftaran calon anggota dialihkan ke Google Form & WhatsApp Narahubung agar tidak masuk ke database.
+              </p>
+            </div>
+
+            {/* Toggle Status Buka/Tutup */}
+            <div className="flex items-center gap-3 bg-slate-950 px-4 py-2 rounded-2xl border border-slate-800 self-start">
+              <span className="text-xs font-bold text-slate-300">Status Pendaftaran:</span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.registrationIsOpen}
+                  onChange={(e) => setFormData({ ...formData, registrationIsOpen: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F5C400]"></div>
+                <span className="ml-2 text-xs font-bold text-[#F5C400]">
+                  {formData.registrationIsOpen ? 'DIBUKA' : 'DITUTUP'}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-5 text-xs">
+            {/* Google Form Link */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block font-bold text-slate-200 uppercase tracking-wider">
+                  Link / URL Google Form Resmi *
+                </label>
+                {formData.registrationGformUrl && (
+                  <a
+                    href={formData.registrationGformUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#F5C400] hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    <span>Uji Link Google Form</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+              <input
+                type="url"
+                value={formData.registrationGformUrl}
+                onChange={(e) => setFormData({ ...formData, registrationGformUrl: e.target.value })}
+                placeholder="https://forms.gle/..."
+                className="w-full bg-slate-900 border border-slate-700 focus:border-[#F5C400] rounded-xl px-3.5 py-2.5 text-white font-mono"
+              />
+              <p className="text-[11px] text-slate-500">
+                Pendaftar yang mengeklik tombol di website akan langsung diarahkan ke tautan Google Form ini.
+              </p>
+            </div>
+
+            {/* Judul & Deskripsi Pendaftaran */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">Judul Halaman Pendaftaran</label>
+                <input
+                  type="text"
+                  value={formData.registrationTitle}
+                  onChange={(e) => setFormData({ ...formData, registrationTitle: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">Subjudul Pengantar</label>
+                <input
+                  type="text"
+                  value={formData.registrationSubtitle}
+                  onChange={(e) => setFormData({ ...formData, registrationSubtitle: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-300 mb-1">Petunjuk Singkat di Bawah Form</label>
+              <textarea
+                rows={2}
+                value={formData.registrationGuideText}
+                onChange={(e) => setFormData({ ...formData, registrationGuideText: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white"
+              />
+            </div>
+
+            {/* Kelola Narahubung (Contact Person) */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                <span className="font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-[#F5C400]" />
+                  Daftar Narahubung (Contact Person)
+                </span>
+                <button
+                  onClick={handleAddRegContact}
+                  className="px-3 py-1 bg-[#102A56] text-[#F5C400] rounded-xl font-bold border border-[#F5C400]/30 hover:bg-[#163872] flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Narahubung</span>
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {formData.registrationContactPersons?.map((cp, idx) => (
+                  <div key={cp.id || idx} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#F5C400]">Narahubung #{idx + 1}</span>
+                      <button
+                        onClick={() => handleRemoveRegContact(idx)}
+                        className="text-rose-400 hover:text-rose-300 p-1 rounded hover:bg-rose-500/10"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-bold mb-1">Nama</label>
+                        <input
+                          type="text"
+                          value={cp.name}
+                          onChange={(e) => handleRegContactChange(idx, 'name', e.target.value)}
+                          placeholder="Bayu Dirgantara"
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-bold mb-1">Jabatan / Divisi</label>
+                        <input
+                          type="text"
+                          value={cp.role}
+                          onChange={(e) => handleRegContactChange(idx, 'role', e.target.value)}
+                          placeholder="Ketua Umum"
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-bold mb-1">No. HP / Telepon</label>
+                        <input
+                          type="text"
+                          value={cp.phone}
+                          onChange={(e) => handleRegContactChange(idx, 'phone', e.target.value)}
+                          placeholder="085876543210"
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-bold mb-1">WhatsApp (62...)</label>
+                        <input
+                          type="text"
+                          value={cp.whatsapp}
+                          onChange={(e) => handleRegContactChange(idx, 'whatsapp', e.target.value)}
+                          placeholder="6285876543210"
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Kelola Persyaratan */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                <span className="font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#F5C400]" />
+                  Poin Persyaratan Calon Anggota
+                </span>
+                <button
+                  onClick={handleAddRegRequirement}
+                  className="px-3 py-1 bg-[#102A56] text-[#F5C400] rounded-xl font-bold border border-[#F5C400]/30 hover:bg-[#163872] flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Poin</span>
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {formData.registrationRequirements?.map((req, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-slate-900 text-[#F5C400] font-bold text-xs flex items-center justify-center flex-shrink-0">
+                      {i + 1}
+                    </span>
+                    <input
+                      type="text"
+                      value={req}
+                      onChange={(e) => handleRegRequirementChange(i, e.target.value)}
+                      className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-xs"
+                    />
+                    <button
+                      onClick={() => handleRemoveRegRequirement(i)}
+                      className="text-rose-400 hover:text-rose-300 p-1.5 hover:bg-rose-500/10 rounded"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: KONTAK, MEDSOS & FOOTER */}
       {activeTab === 'kontak' && (
         <div className="p-6 sm:p-8 rounded-3xl bg-slate-900 border border-slate-800 space-y-6">
           <div className="border-b border-slate-800 pb-3">

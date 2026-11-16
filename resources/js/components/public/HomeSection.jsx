@@ -523,7 +523,7 @@ export const HomeSection = () => {
                 className="px-6 py-3.5 rounded-2xl bg-[#F5C400] hover:bg-[#e6b800] text-[#102A56] font-black text-xs uppercase tracking-wider shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
               >
                 <UserPlus className="w-4 h-4" />
-                <span>Isi Formulir Pendaftaran Sekarang</span>
+                <span>Daftar Calon Anggota (Google Form)</span>
               </button>
 
               <button

@@ -16,11 +16,13 @@ import {
   AlertTriangle,
   Lock,
   Flame,
-  Plus
+  Plus,
+  ExternalLink
 } from 'lucide-react';
 
 export const AdminDashboard = () => {
   const {
+    settings,
     memberRegistrations,
     members,
     activities,
@@ -81,15 +83,17 @@ export const AdminDashboard = () => {
           className="p-5 rounded-3xl bg-slate-900 border border-slate-800 hover:border-[#F5C400]/60 cursor-pointer transition-all hover:shadow-xl space-y-3"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400">Calon Anggota Baru</span>
+            <span className="text-xs font-bold text-slate-400">Pendaftaran Calon Anggota</span>
             <div className="w-8 h-8 rounded-xl bg-[#102A56] text-[#F5C400] flex items-center justify-center">
               <UserPlus className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-3xl font-black text-white">{memberRegistrations.length}</div>
-            <div className="text-[11px] text-rose-400 font-semibold mt-1">
-              {pendingMembers.length} Menunggu Verifikasi
+            <div className="text-2xl font-black text-white">
+              {settings.registrationIsOpen !== false ? 'DIBUKA' : 'DITUTUP'}
+            </div>
+            <div className="text-[11px] text-[#F5C400] font-semibold mt-1">
+              Google Form & Narahubung Aktif
             </div>
           </div>
         </div>
@@ -154,51 +158,67 @@ export const AdminDashboard = () => {
 
       {/* Grid: Latest Registration Queue & Notifications */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left: Pending Member Registrations Table */}
+        {/* Left: Google Form & Registration Status Widget */}
         <div className="lg:col-span-7 rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
               <UserPlus className="w-4 h-4 text-[#F5C400]" />
-              <h3 className="text-base font-bold text-white">Antrean Pendaftaran Calon Anggota</h3>
+              <h3 className="text-base font-bold text-white">Status Pendaftaran (Google Form)</h3>
             </div>
             <button
               onClick={() => setAdminCurrentTab('pendaftaran-anggota')}
               className="text-xs text-[#F5C400] hover:underline font-semibold"
             >
-              Lihat Semua
+              Kelola Pengaturan
             </button>
           </div>
 
-          {memberRegistrations.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-500">Belum ada pendaftaran masuk</div>
-          ) : (
-            <div className="space-y-2.5">
-              {memberRegistrations.slice(0, 4).map((reg) => (
-                <div
-                  key={reg.id}
-                  className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800/80 flex items-center justify-between gap-3 text-xs"
+          <div className="space-y-3">
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Tautan Formulir:</span>
+                <a
+                  href={settings.registrationGformUrl || 'https://forms.gle/'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-[#F5C400] hover:underline flex items-center gap-1 font-bold"
                 >
-                  <div>
-                    <div className="font-bold text-white">{reg.fullName}</div>
-                    <div className="text-[11px] text-slate-400">
-                      NIM: {reg.nim} • {reg.faculty}
-                    </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">{reg.createdAt}</div>
-                  </div>
-
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                    reg.status === 'Terverifikasi'
-                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                      : reg.status === 'Dihubungi'
-                      ? 'bg-sky-950 text-sky-400 border border-sky-800'
-                      : 'bg-amber-950 text-amber-300 border border-amber-800'
-                  }`}>
-                    {reg.status}
-                  </span>
-                </div>
-              ))}
+                  <span>Buka Form</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+              <div className="text-xs text-slate-300 font-mono bg-slate-900/80 p-2.5 rounded-xl border border-slate-800/80 truncate">
+                {settings.registrationGformUrl || 'https://forms.gle/mapakti-diklatsar-reg'}
+              </div>
             </div>
-          )}
+
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold text-white">Status Publik:</div>
+                <div className="text-[11px] text-slate-400">
+                  {settings.registrationIsOpen !== false
+                    ? 'Tautan form & kontak aktif di front-end'
+                    : 'Pendaftaran ditutup di front-end'}
+                </div>
+              </div>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                  settings.registrationIsOpen !== false
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                }`}
+              >
+                {settings.registrationIsOpen !== false ? 'DIBUKA' : 'DITUTUP'}
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-[11px] text-slate-400 flex items-start gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-[#F5C400] flex-shrink-0 mt-0.5" />
+              <span>
+                Pendaftaran tidak disimpan ke database website. Rekap data masuk langsung terpusat di Google Form & respon WhatsApp Narahubung.
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Right: Notifications & Recent Activity Logs (FR-19, FR-20) */}
