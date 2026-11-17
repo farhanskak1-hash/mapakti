@@ -1,5 +1,43 @@
 import { getPool } from './db.js';
 
+let tablesInitialized = false;
+
+async function ensureTables(pool) {
+  if (tablesInitialized) return;
+  try {
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS mapakti_collections (
+        collection_key VARCHAR(100) PRIMARY KEY,
+        data_json LONGTEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS members (
+        id VARCHAR(100) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        nia VARCHAR(100),
+        generation VARCHAR(100),
+        join_year INT,
+        faculty VARCHAR(255),
+        membership_status VARCHAR(100),
+        specialization_division VARCHAR(100),
+        phone VARCHAR(50),
+        email VARCHAR(255),
+        achievements TEXT,
+        photo_url TEXT,
+        is_published TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+    tablesInitialized = true;
+  } catch (err) {
+    console.error('Error ensuring tables:', err.message);
+  }
+}
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -15,6 +53,7 @@ export default async function handler(req, res) {
   }
 
   const pool = getPool();
+  await ensureTables(pool);
 
   try {
     if (req.method === 'GET') {

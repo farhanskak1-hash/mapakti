@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   initialSiteSettings,
   initialProfile,
@@ -51,23 +51,38 @@ export const DataProvider = ({ children }) => {
     }
   };
 
+  // Helper to get initial state with highest priority to Server DB (via window.__INITIAL_DATA__)
+  // Ini memastikan saat ganti browser data langsung sinkron dari server database, bukan reset ke default codingan!
+  const getInitial = (key, fallback) => {
+    if (typeof window !== 'undefined' && window.__INITIAL_DATA__ && window.__INITIAL_DATA__[key] !== undefined) {
+      const val = window.__INITIAL_DATA__[key];
+      if (val !== null && val !== undefined) {
+        return val;
+      }
+    }
+    return loadStored(key, fallback);
+  };
+
+  // Flag untuk mencegah efek awal menimpa database dengan data default saat ganti browser
+  const isHydratedRef = useRef(false);
+
   // State initialization
-  const [settings, setSettings] = useState(() => loadStored('settings', initialSiteSettings));
-  const [profile, setProfile] = useState(() => loadStored('profile', initialProfile));
-  const [divisions, setDivisions] = useState(() => loadStored('divisions', initialDivisions));
-  const [periods, setPeriods] = useState(() => loadStored('periods', initialPeriods));
-  const [members, setMembers] = useState(() => loadStored('members', initialMembers));
-  const [programs, setPrograms] = useState(() => loadStored('programs', initialWorkPrograms));
-  const [activities, setActivities] = useState(() => loadStored('activities', initialActivities));
-  const [activityRegistrations, setActivityRegistrations] = useState(() => loadStored('act_regs', initialActivityRegistrations));
-  const [memberRegistrations, setMemberRegistrations] = useState(() => loadStored('mem_regs', initialMemberRegistrations));
-  const [news, setNews] = useState(() => loadStored('news', initialNews));
-  const [gallery, setGallery] = useState(() => loadStored('gallery', initialGallery));
-  const [diklatsarEvents, setDiklatsarEvents] = useState(() => loadStored('diklatsar', initialDiklatsarEvents));
-  const [achievements, setAchievements] = useState(() => loadStored('achievements', initialAchievements));
-  const [alumni, setAlumni] = useState(() => loadStored('alumni', initialAlumni));
-  const [auditLogs, setAuditLogs] = useState(() => loadStored('audit_logs', initialAuditLogs));
-  const [notifications, setNotifications] = useState(() => loadStored('notifications', initialNotifications));
+  const [settings, setSettings] = useState(() => getInitial('settings', initialSiteSettings));
+  const [profile, setProfile] = useState(() => getInitial('profile', initialProfile));
+  const [divisions, setDivisions] = useState(() => getInitial('divisions', initialDivisions));
+  const [periods, setPeriods] = useState(() => getInitial('periods', initialPeriods));
+  const [members, setMembers] = useState(() => getInitial('members', initialMembers));
+  const [programs, setPrograms] = useState(() => getInitial('programs', initialWorkPrograms));
+  const [activities, setActivities] = useState(() => getInitial('activities', initialActivities));
+  const [activityRegistrations, setActivityRegistrations] = useState(() => getInitial('act_regs', initialActivityRegistrations));
+  const [memberRegistrations, setMemberRegistrations] = useState(() => getInitial('mem_regs', initialMemberRegistrations));
+  const [news, setNews] = useState(() => getInitial('news', initialNews));
+  const [gallery, setGallery] = useState(() => getInitial('gallery', initialGallery));
+  const [diklatsarEvents, setDiklatsarEvents] = useState(() => getInitial('diklatsar', initialDiklatsarEvents));
+  const [achievements, setAchievements] = useState(() => getInitial('achievements', initialAchievements));
+  const [alumni, setAlumni] = useState(() => getInitial('alumni', initialAlumni));
+  const [auditLogs, setAuditLogs] = useState(() => getInitial('audit_logs', initialAuditLogs));
+  const [notifications, setNotifications] = useState(() => getInitial('notifications', initialNotifications));
 
   // Navigation State
   const [currentSection, setCurrentSection] = useState(() => {
@@ -114,7 +129,7 @@ export const DataProvider = ({ children }) => {
   // Database Sync State
   const [isDbConnected, setIsDbConnected] = useState(false);
 
-  // Helper to send updates to Aiven MySQL (/api/data)
+  // Helper to send updates to Database backend (/api/data)
   const syncToApi = async (key, data) => {
     try {
       await fetch('/api/data', {
@@ -128,7 +143,7 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  // Initial hydrate from Aiven MySQL via /api/data
+  // Initial hydrate from Database via /api/data
   useEffect(() => {
     let active = true;
     async function loadFromDb() {
@@ -136,6 +151,7 @@ export const DataProvider = ({ children }) => {
         const res = await fetch('/api/data');
         if (!res.ok) {
           console.warn('[MAPAKTI] /api/data returned', res.status, '- fallback to localStorage');
+          isHydratedRef.current = true;
           return;
         }
         const resData = await res.json();
@@ -161,29 +177,36 @@ export const DataProvider = ({ children }) => {
         }
       } catch (err) {
         // Fallback to localStorage without breaking UI
+      } finally {
+        if (active) {
+          // Tandai hidrasi selesai agar perubahan setelah ini disinkronkan ke server
+          setTimeout(() => {
+            isHydratedRef.current = true;
+          }, 100);
+        }
       }
     }
     loadFromDb();
     return () => { active = false; };
   }, []);
 
-  // Auto-sync state to localStorage and Aiven MySQL
-  useEffect(() => { localStorage.setItem('mapakti_settings', JSON.stringify(settings)); syncToApi('settings', settings); }, [settings]);
-  useEffect(() => { localStorage.setItem('mapakti_profile', JSON.stringify(profile)); syncToApi('profile', profile); }, [profile]);
-  useEffect(() => { localStorage.setItem('mapakti_divisions', JSON.stringify(divisions)); syncToApi('divisions', divisions); }, [divisions]);
-  useEffect(() => { localStorage.setItem('mapakti_periods', JSON.stringify(periods)); syncToApi('periods', periods); }, [periods]);
-  useEffect(() => { localStorage.setItem('mapakti_members', JSON.stringify(members)); syncToApi('members', members); }, [members]);
-  useEffect(() => { localStorage.setItem('mapakti_programs', JSON.stringify(programs)); syncToApi('programs', programs); }, [programs]);
-  useEffect(() => { localStorage.setItem('mapakti_activities', JSON.stringify(activities)); syncToApi('activities', activities); }, [activities]);
-  useEffect(() => { localStorage.setItem('mapakti_act_regs', JSON.stringify(activityRegistrations)); syncToApi('act_regs', activityRegistrations); }, [activityRegistrations]);
-  useEffect(() => { localStorage.setItem('mapakti_mem_regs', JSON.stringify(memberRegistrations)); syncToApi('mem_regs', memberRegistrations); }, [memberRegistrations]);
-  useEffect(() => { localStorage.setItem('mapakti_news', JSON.stringify(news)); syncToApi('news', news); }, [news]);
-  useEffect(() => { localStorage.setItem('mapakti_gallery', JSON.stringify(gallery)); syncToApi('gallery', gallery); }, [gallery]);
-  useEffect(() => { localStorage.setItem('mapakti_diklatsar', JSON.stringify(diklatsarEvents)); syncToApi('diklatsar', diklatsarEvents); }, [diklatsarEvents]);
-  useEffect(() => { localStorage.setItem('mapakti_achievements', JSON.stringify(achievements)); syncToApi('achievements', achievements); }, [achievements]);
-  useEffect(() => { localStorage.setItem('mapakti_alumni', JSON.stringify(alumni)); syncToApi('alumni', alumni); }, [alumni]);
-  useEffect(() => { localStorage.setItem('mapakti_audit_logs', JSON.stringify(auditLogs)); syncToApi('audit_logs', auditLogs); }, [auditLogs]);
-  useEffect(() => { localStorage.setItem('mapakti_notifications', JSON.stringify(notifications)); syncToApi('notifications', notifications); }, [notifications]);
+  // Auto-sync state to localStorage and Database (hanya aktif setelah hidrasi selesai, mencegah overwrite saat ganti browser)
+  useEffect(() => { localStorage.setItem('mapakti_settings', JSON.stringify(settings)); if (isHydratedRef.current) syncToApi('settings', settings); }, [settings]);
+  useEffect(() => { localStorage.setItem('mapakti_profile', JSON.stringify(profile)); if (isHydratedRef.current) syncToApi('profile', profile); }, [profile]);
+  useEffect(() => { localStorage.setItem('mapakti_divisions', JSON.stringify(divisions)); if (isHydratedRef.current) syncToApi('divisions', divisions); }, [divisions]);
+  useEffect(() => { localStorage.setItem('mapakti_periods', JSON.stringify(periods)); if (isHydratedRef.current) syncToApi('periods', periods); }, [periods]);
+  useEffect(() => { localStorage.setItem('mapakti_members', JSON.stringify(members)); if (isHydratedRef.current) syncToApi('members', members); }, [members]);
+  useEffect(() => { localStorage.setItem('mapakti_programs', JSON.stringify(programs)); if (isHydratedRef.current) syncToApi('programs', programs); }, [programs]);
+  useEffect(() => { localStorage.setItem('mapakti_activities', JSON.stringify(activities)); if (isHydratedRef.current) syncToApi('activities', activities); }, [activities]);
+  useEffect(() => { localStorage.setItem('mapakti_act_regs', JSON.stringify(activityRegistrations)); if (isHydratedRef.current) syncToApi('act_regs', activityRegistrations); }, [activityRegistrations]);
+  useEffect(() => { localStorage.setItem('mapakti_mem_regs', JSON.stringify(memberRegistrations)); if (isHydratedRef.current) syncToApi('mem_regs', memberRegistrations); }, [memberRegistrations]);
+  useEffect(() => { localStorage.setItem('mapakti_news', JSON.stringify(news)); if (isHydratedRef.current) syncToApi('news', news); }, [news]);
+  useEffect(() => { localStorage.setItem('mapakti_gallery', JSON.stringify(gallery)); if (isHydratedRef.current) syncToApi('gallery', gallery); }, [gallery]);
+  useEffect(() => { localStorage.setItem('mapakti_diklatsar', JSON.stringify(diklatsarEvents)); if (isHydratedRef.current) syncToApi('diklatsar', diklatsarEvents); }, [diklatsarEvents]);
+  useEffect(() => { localStorage.setItem('mapakti_achievements', JSON.stringify(achievements)); if (isHydratedRef.current) syncToApi('achievements', achievements); }, [achievements]);
+  useEffect(() => { localStorage.setItem('mapakti_alumni', JSON.stringify(alumni)); if (isHydratedRef.current) syncToApi('alumni', alumni); }, [alumni]);
+  useEffect(() => { localStorage.setItem('mapakti_audit_logs', JSON.stringify(auditLogs)); if (isHydratedRef.current) syncToApi('audit_logs', auditLogs); }, [auditLogs]);
+  useEffect(() => { localStorage.setItem('mapakti_notifications', JSON.stringify(notifications)); if (isHydratedRef.current) syncToApi('notifications', notifications); }, [notifications]);
 
   // Toast Notification System
   const addToast = ({ type = 'info', title, message }) => {
@@ -509,7 +532,7 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  const resetToFactoryDefaults = () => {
+  const resetToFactoryDefaults = async () => {
     if (window.confirm('Apakah Anda yakin ingin mereset seluruh data kembali ke setelan default awal?')) {
       localStorage.clear();
       setSettings(initialSiteSettings);
@@ -528,6 +551,36 @@ export const DataProvider = ({ children }) => {
       setAlumni(initialAlumni);
       setAuditLogs(initialAuditLogs);
       setNotifications(initialNotifications);
+
+      try {
+        await fetch('/api/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            updates: {
+              settings: initialSiteSettings,
+              profile: initialProfile,
+              divisions: initialDivisions,
+              periods: initialPeriods,
+              members: initialMembers,
+              programs: initialWorkPrograms,
+              activities: initialActivities,
+              act_regs: initialActivityRegistrations,
+              mem_regs: initialMemberRegistrations,
+              news: initialNews,
+              gallery: initialGallery,
+              diklatsar: initialDiklatsarEvents,
+              achievements: initialAchievements,
+              alumni: initialAlumni,
+              audit_logs: initialAuditLogs,
+              notifications: initialNotifications
+            }
+          })
+        });
+      } catch (e) {
+        console.warn('Failed to reset backend database:', e);
+      }
+
       addToast({
         type: 'info',
         title: 'Reset Selesai',
