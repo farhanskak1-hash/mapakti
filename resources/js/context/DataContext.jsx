@@ -134,11 +134,14 @@ export const DataProvider = ({ children }) => {
     async function loadFromDb() {
       try {
         const res = await fetch('/api/data');
-        if (!res.ok) return;
+        if (!res.ok) {
+          console.warn('[MAPAKTI] /api/data returned', res.status, '- fallback to localStorage');
+          return;
+        }
         const resData = await res.json();
         if (active && resData && resData.ok && resData.data) {
           const d = resData.data;
-          if (d.settings) setSettings(d.settings);
+          if (d.settings && typeof d.settings === 'object') setSettings(d.settings);
           if (d.profile) setProfile(d.profile);
           if (d.divisions) setDivisions(d.divisions);
           if (d.periods) setPeriods(d.periods);
