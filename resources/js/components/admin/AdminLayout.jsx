@@ -53,7 +53,8 @@ export const AdminLayout = () => {
     news,
     notifications,
     markNotificationAsRead,
-    markAllNotificationsAsRead
+    markAllNotificationsAsRead,
+    settings
   } = useData();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
