@@ -57,6 +57,17 @@ export const WorkProgramSection = () => {
               className="rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-4 hover:border-[#F5C400]/40 transition-all flex flex-col justify-between"
             >
               <div className="space-y-3">
+                {prog.imageUrl && (
+                  <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-slate-800 -mx-1 -mt-1">
+                    <img
+                      src={prog.imageUrl}
+                      alt={prog.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#102A56] text-[#F5C400] border border-[#F5C400]/40">
                     {prog.divisionOrField}

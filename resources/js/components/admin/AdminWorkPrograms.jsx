@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
+import { ImageUploadInput } from '../common/ImageUploadInput';
 import { Flame, Plus, Edit2, Trash2, Calendar, Target, DollarSign, X } from 'lucide-react';
 
 export const AdminWorkPrograms = () => {
@@ -14,7 +15,8 @@ export const AdminWorkPrograms = () => {
     timeline: '',
     output: '',
     budgetEstimated: '',
-    status: 'Rencana'
+    status: 'Rencana',
+    imageUrl: ''
   });
 
   const handleOpenAdd = () => {
@@ -26,7 +28,8 @@ export const AdminWorkPrograms = () => {
       timeline: 'Semester Genap 2025',
       output: 'Peningkatan kapasitas teknis dan pengabdian alam',
       budgetEstimated: 'Rp 5.000.000',
-      status: 'Rencana'
+      status: 'Rencana',
+      imageUrl: ''
     });
     setShowModal(true);
   };
@@ -235,6 +238,16 @@ export const AdminWorkPrograms = () => {
                   value={formData.output}
                   onChange={(e) => setFormData({ ...formData, output: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#F5C400]"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-slate-800">
+                <ImageUploadInput
+                  value={formData.imageUrl}
+                  onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                  label="Foto Poster / Dokumentasi Proker (Opsional)"
+                  hint="Upload foto dari perangkat (disimpan langsung ke database) atau gunakan link internet"
+                  aspectRatio="aspect-video"
                 />
               </div>
 

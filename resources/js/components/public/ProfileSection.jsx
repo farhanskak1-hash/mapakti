@@ -129,9 +129,13 @@ export const ProfileSection = () => {
             <div className="absolute -inset-1 bg-gradient-to-r from-[#F5C400]/20 to-[#102A56]/40 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity"></div>
             <div className="relative z-10 flex flex-col items-center">
               <img
-                src="/images/logo-mapakti.png"
+                src={profile.logoUrl || settings.logoUrl || '/images/logo-mapakti.png'}
                 alt="Logo Resmi UKM MAPAKTI UPS Tegal"
                 className="w-48 h-48 sm:w-56 sm:h-56 object-contain filter drop-shadow-[0_4px_20px_rgba(245,196,0,0.35)] transition-transform duration-500 group-hover:scale-105"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/images/logo-mapakti.png';
+                }}
               />
               <div className="mt-4">
                 <span className="text-base font-black text-[#F5C400] block tracking-wider font-sans">UKM MAPAKTI</span>

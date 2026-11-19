@@ -97,6 +97,16 @@ export const AdminLoginModal = () => {
             <ShieldCheck className="w-4 h-4" />
             <span>Masuk ke Panel Administrator</span>
           </button>
+
+          <div className="pt-2 border-t border-slate-800/80 text-center space-y-1">
+            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+              Kredensial Default Pengurus:
+            </span>
+            <div className="text-[11px] text-slate-300 font-mono bg-slate-950/80 p-2 rounded-xl border border-slate-800">
+              Email: <span className="text-[#F5C400]">admin@mapakti.tegal</span><br />
+              Sandi: <span className="text-[#F5C400]">MAPAKTI17JULI</span> <span className="text-slate-500">(atau admin123)</span>
+            </div>
+          </div>
         </form>
       </div>
     </div>

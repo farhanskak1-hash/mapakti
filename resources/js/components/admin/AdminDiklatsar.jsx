@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
+import { ImageUploadInput } from '../common/ImageUploadInput';
 import { Award, Plus, Edit2, Trash2, X, MapPin, Users, Calendar } from 'lucide-react';
 
 export const AdminDiklatsar = () => {
@@ -202,12 +203,12 @@ export const AdminDiklatsar = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">URL Cover Foto</label>
-                <input
-                  type="text"
+                <ImageUploadInput
                   value={formData.coverImage}
-                  onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#F5C400]"
+                  onChange={(url) => setFormData({ ...formData, coverImage: url })}
+                  label="Foto Cover Dokumentasi / Pembaiatan"
+                  hint="Upload foto dari perangkat (disimpan langsung ke database) atau gunakan link internet"
+                  aspectRatio="aspect-video"
                 />
               </div>
 

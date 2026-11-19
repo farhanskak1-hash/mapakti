@@ -1,6 +1,19 @@
 import React from 'react';
+import { useData } from '../../context/DataContext';
 
-export const Logo = ({ size = 'md', lightText = true, showText = true, iconOnly = false }) => {
+export const Logo = ({ size = 'md', lightText = true, showText = true, iconOnly = false, customLogoUrl }) => {
+  let settingsLogo = null;
+  try {
+    const data = useData();
+    if (data && data.settings && data.settings.logoUrl) {
+      settingsLogo = data.settings.logoUrl;
+    }
+  } catch (e) {
+    // Quiet fallback when rendered outside DataProvider
+  }
+
+  const logoSrc = customLogoUrl || settingsLogo || '/images/logo-mapakti.png';
+
   const sizeClasses = {
     xs: 'h-6 w-6',
     sm: 'h-8 w-8',
@@ -14,10 +27,14 @@ export const Logo = ({ size = 'md', lightText = true, showText = true, iconOnly 
       {/* Official MAPAKTI Badge Image */}
       <div className={`relative ${sizeClasses[size] || sizeClasses.md} flex-shrink-0 flex items-center justify-center`}>
         <img
-          src="/images/logo-mapakti.png"
+          src={logoSrc}
           alt="Logo Resmi UKM MAPAKTI UPS Tegal"
           className="w-full h-full object-contain filter drop-shadow-[0_2px_8px_rgba(245,196,0,0.35)] transition-transform duration-300 hover:scale-110"
           loading="eager"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/images/logo-mapakti.png';
+          }}
         />
       </div>
 

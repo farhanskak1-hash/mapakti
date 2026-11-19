@@ -11,6 +11,7 @@ import {
   Newspaper,
   Image as ImageIcon,
   Award,
+  Trophy,
   GraduationCap,
   Settings,
   ShieldCheck,
@@ -23,11 +24,17 @@ import {
   CheckCircle2,
   FileText,
   Lock,
-  Database
+  Database,
+  BookOpen,
+  MapPin,
+  Layers
 } from 'lucide-react';
 
 // Admin Tab Components
 import { AdminDashboard } from './AdminDashboard';
+import { AdminNavMenus } from './AdminNavMenus';
+import { AdminHome } from './AdminHome';
+import { AdminProfile } from './AdminProfile';
 import { AdminMemberRegistrations } from './AdminMemberRegistrations';
 import { AdminMembers } from './AdminMembers';
 import { AdminPeriods } from './AdminPeriods';
@@ -38,6 +45,7 @@ import { AdminNews } from './AdminNews';
 import { AdminGallery } from './AdminGallery';
 import { AdminDiklatsar } from './AdminDiklatsar';
 import { AdminAchievements } from './AdminAchievements';
+import { AdminContact } from './AdminContact';
 import { AdminSettings } from './AdminSettings';
 import { AdminAuditLogs } from './AdminAuditLogs';
 
@@ -65,17 +73,21 @@ export const AdminLayout = () => {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard Analitik', icon: LayoutDashboard },
-    { id: 'pendaftaran-anggota', label: 'Pendaftaran (GForm & CP)', icon: UserPlus, badge: settings.registrationIsOpen !== false ? 'Aktif' : 'Tutup' },
-    { id: 'anggota', label: 'Master Data Anggota', icon: Users },
+    { id: 'menu-navigasi', label: 'Manajemen Seluruh Menu', icon: Menu, badge: 'Baru' },
+    { id: 'beranda', label: 'Beranda & Banner Hero', icon: Layers },
+    { id: 'profil', label: 'Profil Organisasi & Lambang', icon: BookOpen },
     { id: 'periode', label: 'Kepengurusan & Periode', icon: ShieldCheck },
+    { id: 'anggota', label: 'Master Data Anggota', icon: Users },
     { id: 'divisi', label: 'Informasi 3 Divisi', icon: Compass },
     { id: 'proker', label: 'Program Kerja Organisasi', icon: Flame },
     { id: 'kegiatan', label: 'Kegiatan & Peserta', icon: Calendar },
     { id: 'berita', label: 'Berita & Publikasi', icon: Newspaper },
     { id: 'galeri', label: 'Galeri Foto', icon: ImageIcon },
     { id: 'diklatsar', label: 'Sejarah DIKLATSAR', icon: Award },
-    { id: 'prestasi', label: 'Rekor Prestasi', icon: Award },
-    { id: 'cms-seo', label: 'Editor Tampilan Front-End & CMS', icon: Settings },
+    { id: 'prestasi', label: 'Rekor Prestasi', icon: Trophy },
+    { id: 'kontak', label: 'Kontak & Sekretariat', icon: MapPin },
+    { id: 'pendaftaran-anggota', label: 'Pendaftaran (GForm & CP)', icon: UserPlus, badge: settings.registrationIsOpen !== false ? 'Aktif' : 'Tutup' },
+    { id: 'cms-seo', label: 'Editor Tampilan & SEO', icon: Settings },
     { id: 'audit', label: 'Audit Log & Keamanan', icon: Lock }
   ];
 
@@ -292,6 +304,9 @@ export const AdminLayout = () => {
         {/* Dynamic Tab Router Content */}
         <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
           {adminCurrentTab === 'dashboard' && <AdminDashboard />}
+          {adminCurrentTab === 'menu-navigasi' && <AdminNavMenus />}
+          {adminCurrentTab === 'beranda' && <AdminHome />}
+          {adminCurrentTab === 'profil' && <AdminProfile />}
           {adminCurrentTab === 'pendaftaran-anggota' && <AdminMemberRegistrations />}
           {adminCurrentTab === 'anggota' && <AdminMembers />}
           {adminCurrentTab === 'periode' && <AdminPeriods />}
@@ -302,6 +317,7 @@ export const AdminLayout = () => {
           {adminCurrentTab === 'galeri' && <AdminGallery />}
           {adminCurrentTab === 'diklatsar' && <AdminDiklatsar />}
           {adminCurrentTab === 'prestasi' && <AdminAchievements />}
+          {adminCurrentTab === 'kontak' && <AdminContact />}
           {adminCurrentTab === 'cms-seo' && <AdminSettings />}
           {adminCurrentTab === 'audit' && <AdminAuditLogs />}
         </main>

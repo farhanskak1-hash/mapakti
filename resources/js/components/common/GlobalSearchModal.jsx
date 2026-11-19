@@ -13,7 +13,6 @@ export const GlobalSearchModal = () => {
     achievements,
     gallery,
     members,
-    alumni,
     setCurrentSection,
     setSelectedNews,
     setSelectedActivity,

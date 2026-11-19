@@ -45,6 +45,7 @@ export const AdminSettings = () => {
   // Combined Form State for Settings and Profile
   const [formData, setFormData] = useState({
     // Hero & General Branding
+    logoUrl: settings.logoUrl || '/images/logo-mapakti.png',
     organizationName: settings.organizationName || 'MAPAKTI — Mahasiswa Pencinta Alam Universitas Pancasakti Tegal',
     shortName: settings.shortName || 'MAPAKTI UPS Tegal',
     tagline: settings.tagline || 'Lestari Alamku, Jaya MAPAKTI-ku',
@@ -350,6 +351,25 @@ export const AdminSettings = () => {
       {/* TAB 1: HERO BANNER, RUNNING TICKER & STATS */}
       {activeTab === 'hero' && (
         <div className="space-y-6">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+            <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2 text-[#F5C400]">
+              <ImageIcon className="w-4 h-4" />
+              Logo Resmi Website & Brand Identitas
+            </h3>
+            <p className="text-xs text-slate-400">
+              Logo ini akan tampil di seluruh bilah header, footer, mobile drawer, dan panel admin. Anda dapat mengunggah berkas foto langsung ke database atau menggunakan link URL internet.
+            </p>
+            <div className="max-w-md">
+              <ImageUploadInput
+                value={formData.logoUrl}
+                onChange={(url) => setFormData({ ...formData, logoUrl: url })}
+                label="Logo Resmi MAPAKTI"
+                hint="Mendukung format PNG transparan, JPG, WebP, atau SVG"
+                aspectRatio="aspect-square"
+              />
+            </div>
+          </div>
+
           <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
             <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2 text-[#F5C400]">
               <Sparkles className="w-4 h-4" />

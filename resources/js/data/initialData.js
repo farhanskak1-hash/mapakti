@@ -4,6 +4,51 @@ export const initialSiteSettings = {
   tagline: 'Lestari Alamku, Jaya MAPAKTI-ku — Eksplorasi, Konservasi, dan Persaudaraan Rimba',
   establishedYear: '1984',
   baseCampus: 'Universitas Pancasakti Tegal',
+  logoUrl: '/images/logo-mapakti.png',
+
+  // Pengaturan & Kustomisasi Menu Navigasi
+  navMenus: [
+    { id: 'home', label: 'Beranda', path: 'home', isEnabled: true, badge: '' },
+    {
+      id: 'profil',
+      label: 'Profil',
+      path: 'profil',
+      isEnabled: true,
+      badge: '',
+      subMenu: [
+        { id: 'sejarah', label: 'Sejarah & Visi Misi', path: 'profil', desc: 'Identitas, asas, dan lambang' },
+        { id: 'kepengurusan', label: 'Struktur Kepengurusan', path: 'kepengurusan', desc: 'Pengurus per periode aktif' },
+        { id: 'anggota', label: 'Data Anggota Publik', path: 'anggota', desc: 'Direktori anggota terverifikasi' }
+      ]
+    },
+    {
+      id: 'eksplorasi',
+      label: 'Eksplorasi',
+      path: 'divisi',
+      isEnabled: true,
+      badge: '',
+      subMenu: [
+        { id: 'divisi', label: '3 Divisi Operasional', path: 'divisi', desc: 'Hutan Gunung, RC & KSDA' },
+        { id: 'proker', label: 'Program Kerja', path: 'proker', desc: 'Agenda dan realisasi kegiatan' },
+        { id: 'kegiatan', label: 'Kegiatan & Ekspedisi', path: 'kegiatan', desc: 'Jadwal & pendaftaran terbuka' }
+      ]
+    },
+    {
+      id: 'publikasi',
+      label: 'Publikasi',
+      path: 'berita',
+      isEnabled: true,
+      badge: '',
+      subMenu: [
+        { id: 'berita', label: 'Warta & Berita Rimba', path: 'berita', desc: 'Kabar petualangan & opini' },
+        { id: 'galeri', label: 'Galeri Dokumentasi', path: 'galeri', desc: 'Foto ekspedisi & kegiatan' },
+        { id: 'diklatsar', label: 'Sejarah DIKLATSAR', path: 'diklatsar', desc: 'Arsip angkatan & pendidikan dasar' }
+      ]
+    },
+    { id: 'prestasi', label: 'Prestasi', path: 'prestasi', isEnabled: true, badge: '' },
+    { id: 'kontak', label: 'Kontak', path: 'kontak', isEnabled: true, badge: '' },
+    { id: 'daftar-anggota', label: 'Daftar Anggota', path: 'daftar-anggota', isEnabled: true, badge: 'DIBUKA' }
+  ],
   
   // Sambutan Ketua Umum (FR-01, FR-16)
   chairmanName: 'M. Bayu Dirgantara',
@@ -99,6 +144,7 @@ export const initialSiteSettings = {
 };
 
 export const initialProfile = {
+  logoUrl: '/images/logo-mapakti.png',
   history: `MAPAKTI (Mahasiswa Pencinta Alam Universitas Pancasakti Tegal) didirikan atas inisiatif sekelompok mahasiswa yang memiliki kecintaan mendalam terhadap kelestarian alam dan hasrat bereksplorasi di alam bebas. Sejak diresmikan di lingkungan kampus Universitas Pancasakti Tegal, MAPAKTI telah menjadi kawah candradimuka penempaan karakter kepemimpinan, kepedulian ekologis, dan ketangguhan fisik serta mental bagi ribuan kader.
 
 Melalui perjalanan empat dekade, MAPAKTI telah menjelajahi puncak-puncak gunung di seantero Nusantara, menembus lorong karst bawah tanah, menaklukkan tebing terjal alam bebas, serta mengarungi sungai-sungai berarus deras. Lebih dari sekadar petualangan, MAPAKTI senantiasa konsisten hadir di garda terdepan aksi kemanusiaan SAR kebencanaan dan program konservasi pesisir pantai utara Jawa Tengah.`,

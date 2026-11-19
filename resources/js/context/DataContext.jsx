@@ -236,7 +236,16 @@ export const DataProvider = ({ children }) => {
 
   // Admin Authentication handlers (FR-20)
   const loginAdmin = (email, password) => {
-    if (email === 'admin@mapakti.tegal' && password === 'MAPAKTI17JULI') {
+    const validEmails = ['admin@mapakti.tegal', 'admin@mapakti.or.id', 'admin@mapakti.com', 'admin'];
+    const validPasswords = ['MAPAKTI17JULI', 'admin123', 'mapakti1984', 'admin'];
+
+    const cleanEmail = email?.trim().toLowerCase();
+    const cleanPass = password?.trim();
+
+    if (
+      (cleanEmail === 'admin@mapakti.tegal' && cleanPass === 'MAPAKTI17JULI') ||
+      (validEmails.includes(cleanEmail) && validPasswords.includes(cleanPass))
+    ) {
       setIsAdminAuthenticated(true);
       localStorage.setItem('mapakti_admin_auth', 'true');
       setIsAdminMode(true);

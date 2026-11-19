@@ -88,6 +88,20 @@ export const Header = () => {
   const isPublicationActive = ['berita', 'news', 'galeri', 'gallery', 'diklatsar'].includes(currentSection);
   const isAchievementsActive = ['prestasi', 'achievements'].includes(currentSection);
 
+  // Helper getters for customizable navigation menus
+  const navMenus = settings.navMenus || [];
+  const getMenu = (id, fallbackLabel) => {
+    const m = navMenus.find((item) => item.id === id);
+    if (!m) return { label: fallbackLabel, isEnabled: true, badge: '' };
+    return m;
+  };
+  const getSubMenu = (menuId, subId, fallbackLabel, fallbackDesc) => {
+    const m = navMenus.find((item) => item.id === menuId);
+    const sub = m?.subMenu?.find((s) => s.id === subId);
+    if (!sub) return { label: fallbackLabel, desc: fallbackDesc };
+    return sub;
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full shadow-xl">
       {/* 1. TOP UTILITY TICKER & HOTLINE BAR */}
@@ -150,286 +164,328 @@ export const Header = () => {
           {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-xs font-bold uppercase tracking-wider">
             {/* Beranda */}
-            <button
-              onClick={() => navigateTo('home')}
-              className={`px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 relative group ${
-                currentSection === 'home' || currentSection === 'beranda'
-                  ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
-                  : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
-              }`}
-            >
-              <span>Beranda</span>
-              {(currentSection === 'home' || currentSection === 'beranda') && (
-                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
-              )}
-            </button>
+            {getMenu('home', 'Beranda').isEnabled !== false && (
+              <button
+                onClick={() => navigateTo('home')}
+                className={`px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 relative group ${
+                  currentSection === 'home' || currentSection === 'beranda'
+                    ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
+                    : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
+                }`}
+              >
+                <span>{getMenu('home', 'Beranda').label}</span>
+                {getMenu('home', 'Beranda').badge && (
+                  <span className="px-1.5 py-0.2 rounded bg-[#F5C400] text-[#102A56] text-[9px] font-black">
+                    {getMenu('home', 'Beranda').badge}
+                  </span>
+                )}
+                {(currentSection === 'home' || currentSection === 'beranda') && (
+                  <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
+                )}
+              </button>
+            )}
 
             {/* Dropdown: Profil Organisasi */}
-            <div
-              className="relative"
-              onMouseEnter={() => handleMouseEnter('profil')}
-              onMouseLeave={handleMouseLeave}
-            >
-              <button
-                onClick={() => navigateTo('profil')}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all relative group ${
-                  isProfileActive
-                    ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
-                    : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
-                }`}
+            {getMenu('profil', 'Profil').isEnabled !== false && (
+              <div
+                className="relative"
+                onMouseEnter={() => handleMouseEnter('profil')}
+                onMouseLeave={handleMouseLeave}
               >
-                <span>Profil</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    activeDropdown === 'profil' ? 'rotate-180 text-[#F5C400]' : 'text-slate-300'
+                <button
+                  onClick={() => navigateTo('profil')}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all relative group ${
+                    isProfileActive
+                      ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
+                      : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
                   }`}
-                />
-                {isProfileActive && (
-                  <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
-                )}
-              </button>
-
-              {activeDropdown === 'profil' && (
-                <div
-                  className="absolute top-full left-0 w-64 py-2 mt-1 bg-[#0b1424] border border-[#F5C400]/30 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150 z-50 divide-y divide-slate-800/60"
-                  onMouseEnter={() => handleMouseEnter('profil')}
-                  onMouseLeave={handleMouseLeave}
                 >
-                  <div className="py-1">
-                    <button
-                      onClick={() => navigateTo('profil')}
-                      className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
-                        currentSection === 'profil' || currentSection === 'profile'
-                          ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
-                          : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
-                      }`}
-                    >
-                      <BookOpen className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-bold">Sejarah & Visi Misi</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Identitas, asas, dan lambang</div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => navigateTo('kepengurusan')}
-                      className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
-                        currentSection === 'kepengurusan' || currentSection === 'management'
-                          ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
-                          : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
-                      }`}
-                    >
-                      <Users className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-bold">Struktur Kepengurusan</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Pengurus per periode aktif</div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => navigateTo('anggota')}
-                      className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
-                        currentSection === 'anggota' || currentSection === 'members'
-                          ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
-                          : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
-                      }`}
-                    >
-                      <ShieldCheck className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-bold">Data Anggota Publik</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Direktori anggota terverifikasi</div>
-                      </div>
-                    </button>
+                  <span>{getMenu('profil', 'Profil').label}</span>
+                  {getMenu('profil', 'Profil').badge && (
+                    <span className="px-1.5 py-0.2 rounded bg-[#F5C400] text-[#102A56] text-[9px] font-black">
+                      {getMenu('profil', 'Profil').badge}
+                    </span>
+                  )}
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      activeDropdown === 'profil' ? 'rotate-180 text-[#F5C400]' : 'text-slate-300'
+                    }`}
+                  />
+                  {isProfileActive && (
+                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
+                  )}
+                </button>
+
+                {activeDropdown === 'profil' && (
+                  <div
+                    className="absolute top-full left-0 w-64 py-2 mt-1 bg-[#0b1424] border border-[#F5C400]/30 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150 z-50 divide-y divide-slate-800/60"
+                    onMouseEnter={() => handleMouseEnter('profil')}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <div className="py-1">
+                      <button
+                        onClick={() => navigateTo('profil')}
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
+                          currentSection === 'profil' || currentSection === 'profile'
+                            ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
+                            : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
+                        }`}
+                      >
+                        <BookOpen className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="font-bold">{getSubMenu('profil', 'sejarah', 'Sejarah & Visi Misi').label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal">{getSubMenu('profil', 'sejarah', '', 'Identitas, asas, dan lambang').desc}</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => navigateTo('kepengurusan')}
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
+                          currentSection === 'kepengurusan' || currentSection === 'management'
+                            ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
+                            : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
+                        }`}
+                      >
+                        <Users className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="font-bold">{getSubMenu('profil', 'kepengurusan', 'Struktur Kepengurusan').label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal">{getSubMenu('profil', 'kepengurusan', '', 'Pengurus per periode aktif').desc}</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => navigateTo('anggota')}
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
+                          currentSection === 'anggota' || currentSection === 'members'
+                            ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
+                            : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
+                        }`}
+                      >
+                        <ShieldCheck className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="font-bold">{getSubMenu('profil', 'anggota', 'Data Anggota Publik').label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal">{getSubMenu('profil', 'anggota', '', 'Direktori anggota terverifikasi').desc}</div>
+                        </div>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Dropdown: Eksplorasi (Divisi, Proker, Kegiatan) */}
-            <div
-              className="relative"
-              onMouseEnter={() => handleMouseEnter('eksplorasi')}
-              onMouseLeave={handleMouseLeave}
-            >
-              <button
-                onClick={() => navigateTo('divisi')}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all relative group ${
-                  isExplorationActive
-                    ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
-                    : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
-                }`}
+            {getMenu('eksplorasi', 'Eksplorasi').isEnabled !== false && (
+              <div
+                className="relative"
+                onMouseEnter={() => handleMouseEnter('eksplorasi')}
+                onMouseLeave={handleMouseLeave}
               >
-                <span>Eksplorasi</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    activeDropdown === 'eksplorasi' ? 'rotate-180 text-[#F5C400]' : 'text-slate-300'
+                <button
+                  onClick={() => navigateTo('divisi')}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all relative group ${
+                    isExplorationActive
+                      ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
+                      : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
                   }`}
-                />
-                {isExplorationActive && (
-                  <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
-                )}
-              </button>
-
-              {activeDropdown === 'eksplorasi' && (
-                <div
-                  className="absolute top-full left-0 w-64 py-2 mt-1 bg-[#0b1424] border border-[#F5C400]/30 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150 z-50 divide-y divide-slate-800/60"
-                  onMouseEnter={() => handleMouseEnter('eksplorasi')}
-                  onMouseLeave={handleMouseLeave}
                 >
-                  <div className="py-1">
-                    <button
-                      onClick={() => navigateTo('divisi')}
-                      className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
-                        currentSection === 'divisi' || currentSection === 'divisions'
-                          ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
-                          : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
-                      }`}
-                    >
-                      <Compass className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-bold">3 Divisi Operasional</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Hutan Gunung, RC & KSDA</div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => navigateTo('proker')}
-                      className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
-                        currentSection === 'proker' || currentSection === 'programs'
-                          ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
-                          : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
-                      }`}
-                    >
-                      <Flame className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-bold">Program Kerja</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Agenda dan realisasi kegiatan</div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => navigateTo('kegiatan')}
-                      className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
-                        currentSection === 'kegiatan' || currentSection === 'activities'
-                          ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
-                          : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
-                      }`}
-                    >
-                      <Calendar className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-bold">Kegiatan & Ekspedisi</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Jadwal & pendaftaran terbuka</div>
-                      </div>
-                    </button>
+                  <span>{getMenu('eksplorasi', 'Eksplorasi').label}</span>
+                  {getMenu('eksplorasi', 'Eksplorasi').badge && (
+                    <span className="px-1.5 py-0.2 rounded bg-[#F5C400] text-[#102A56] text-[9px] font-black">
+                      {getMenu('eksplorasi', 'Eksplorasi').badge}
+                    </span>
+                  )}
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      activeDropdown === 'eksplorasi' ? 'rotate-180 text-[#F5C400]' : 'text-slate-300'
+                    }`}
+                  />
+                  {isExplorationActive && (
+                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
+                  )}
+                </button>
+
+                {activeDropdown === 'eksplorasi' && (
+                  <div
+                    className="absolute top-full left-0 w-64 py-2 mt-1 bg-[#0b1424] border border-[#F5C400]/30 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150 z-50 divide-y divide-slate-800/60"
+                    onMouseEnter={() => handleMouseEnter('eksplorasi')}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <div className="py-1">
+                      <button
+                        onClick={() => navigateTo('divisi')}
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
+                          currentSection === 'divisi' || currentSection === 'divisions'
+                            ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
+                            : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
+                        }`}
+                      >
+                        <Compass className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="font-bold">{getSubMenu('eksplorasi', 'divisi', '3 Divisi Operasional').label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal">{getSubMenu('eksplorasi', 'divisi', '', 'Hutan Gunung, RC & KSDA').desc}</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => navigateTo('proker')}
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
+                          currentSection === 'proker' || currentSection === 'programs'
+                            ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
+                            : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
+                        }`}
+                      >
+                        <Flame className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="font-bold">{getSubMenu('eksplorasi', 'proker', 'Program Kerja').label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal">{getSubMenu('eksplorasi', 'proker', '', 'Agenda dan realisasi kegiatan').desc}</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => navigateTo('kegiatan')}
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
+                          currentSection === 'kegiatan' || currentSection === 'activities'
+                            ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
+                            : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
+                        }`}
+                      >
+                        <Calendar className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="font-bold">{getSubMenu('eksplorasi', 'kegiatan', 'Kegiatan & Ekspedisi').label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal">{getSubMenu('eksplorasi', 'kegiatan', '', 'Jadwal & pendaftaran terbuka').desc}</div>
+                        </div>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Dropdown: Publikasi (Berita, Galeri, Diklatsar) */}
-            <div
-              className="relative"
-              onMouseEnter={() => handleMouseEnter('publikasi')}
-              onMouseLeave={handleMouseLeave}
-            >
+            {getMenu('publikasi', 'Publikasi').isEnabled !== false && (
+              <div
+                className="relative"
+                onMouseEnter={() => handleMouseEnter('publikasi')}
+                onMouseLeave={handleMouseLeave}
+              >
+                <button
+                  onClick={() => navigateTo('berita')}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all relative group ${
+                    isPublicationActive
+                      ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
+                      : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
+                  }`}
+                >
+                  <span>{getMenu('publikasi', 'Publikasi').label}</span>
+                  {getMenu('publikasi', 'Publikasi').badge && (
+                    <span className="px-1.5 py-0.2 rounded bg-[#F5C400] text-[#102A56] text-[9px] font-black">
+                      {getMenu('publikasi', 'Publikasi').badge}
+                    </span>
+                  )}
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      activeDropdown === 'publikasi' ? 'rotate-180 text-[#F5C400]' : 'text-slate-300'
+                    }`}
+                  />
+                  {isPublicationActive && (
+                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
+                  )}
+                </button>
+
+                {activeDropdown === 'publikasi' && (
+                  <div
+                    className="absolute top-full left-0 w-64 py-2 mt-1 bg-[#0b1424] border border-[#F5C400]/30 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150 z-50 divide-y divide-slate-800/60"
+                    onMouseEnter={() => handleMouseEnter('publikasi')}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <div className="py-1">
+                      <button
+                        onClick={() => navigateTo('berita')}
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
+                          currentSection === 'berita' || currentSection === 'news'
+                            ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
+                            : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
+                        }`}
+                      >
+                        <Newspaper className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="font-bold">{getSubMenu('publikasi', 'berita', 'Warta & Berita Rimba').label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal">{getSubMenu('publikasi', 'berita', '', 'Kabar petualangan & opini').desc}</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => navigateTo('galeri')}
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
+                          currentSection === 'galeri' || currentSection === 'gallery'
+                            ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
+                            : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
+                        }`}
+                      >
+                        <ImageIcon className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="font-bold">{getSubMenu('publikasi', 'galeri', 'Galeri Dokumentasi').label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal">{getSubMenu('publikasi', 'galeri', '', 'Foto ekspedisi & kegiatan').desc}</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => navigateTo('diklatsar')}
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
+                          currentSection === 'diklatsar'
+                            ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
+                            : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
+                        }`}
+                      >
+                        <Award className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="font-bold">{getSubMenu('publikasi', 'diklatsar', 'Sejarah DIKLATSAR').label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal">{getSubMenu('publikasi', 'diklatsar', '', 'Arsip angkatan & pendidikan dasar').desc}</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Prestasi Direct Link */}
+            {getMenu('prestasi', 'Prestasi').isEnabled !== false && (
               <button
-                onClick={() => navigateTo('berita')}
+                onClick={() => navigateTo('prestasi')}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all relative group ${
-                  isPublicationActive
+                  isAchievementsActive
                     ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
                     : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
                 }`}
               >
-                <span>Publikasi</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    activeDropdown === 'publikasi' ? 'rotate-180 text-[#F5C400]' : 'text-slate-300'
-                  }`}
-                />
-                {isPublicationActive && (
+                <span>{getMenu('prestasi', 'Prestasi').label}</span>
+                {getMenu('prestasi', 'Prestasi').badge && (
+                  <span className="px-1.5 py-0.2 rounded bg-[#F5C400] text-[#102A56] text-[9px] font-black">
+                    {getMenu('prestasi', 'Prestasi').badge}
+                  </span>
+                )}
+                {isAchievementsActive && (
                   <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
                 )}
               </button>
-
-              {activeDropdown === 'publikasi' && (
-                <div
-                  className="absolute top-full left-0 w-64 py-2 mt-1 bg-[#0b1424] border border-[#F5C400]/30 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-150 z-50 divide-y divide-slate-800/60"
-                  onMouseEnter={() => handleMouseEnter('publikasi')}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  <div className="py-1">
-                    <button
-                      onClick={() => navigateTo('berita')}
-                      className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
-                        currentSection === 'berita' || currentSection === 'news'
-                          ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
-                          : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
-                      }`}
-                    >
-                      <Newspaper className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-bold">Warta & Berita Rimba</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Kabar petualangan & opini</div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => navigateTo('galeri')}
-                      className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
-                        currentSection === 'galeri' || currentSection === 'gallery'
-                          ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
-                          : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
-                      }`}
-                    >
-                      <ImageIcon className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-bold">Galeri Dokumentasi</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Foto ekspedisi & kegiatan</div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => navigateTo('diklatsar')}
-                      className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-start gap-3 group ${
-                        currentSection === 'diklatsar'
-                          ? 'bg-[#102A56] text-[#F5C400] border-l-2 border-[#F5C400]'
-                          : 'text-slate-200 hover:bg-[#102A56]/60 hover:text-[#F5C400] hover:border-l-2 hover:border-[#F5C400]'
-                      }`}
-                    >
-                      <Award className="w-4 h-4 text-[#F5C400] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-bold">Sejarah DIKLATSAR</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Arsip angkatan & pendidikan dasar</div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Prestasi Direct Link */}
-            <button
-              onClick={() => navigateTo('prestasi')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all relative group ${
-                isAchievementsActive
-                  ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
-                  : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
-              }`}
-            >
-              <span>Prestasi</span>
-              {isAchievementsActive && (
-                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
-              )}
-            </button>
+            )}
 
             {/* Kontak */}
-            <button
-              onClick={() => navigateTo('kontak')}
-              className={`px-3 py-2 rounded-lg transition-all relative group ${
-                currentSection === 'kontak' || currentSection === 'contact'
-                  ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
-                  : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
-              }`}
-            >
-              <span>Kontak</span>
-              {(currentSection === 'kontak' || currentSection === 'contact') && (
-                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
-              )}
-            </button>
+            {getMenu('kontak', 'Kontak').isEnabled !== false && (
+              <button
+                onClick={() => navigateTo('kontak')}
+                className={`px-3 py-2 rounded-lg transition-all relative group ${
+                  currentSection === 'kontak' || currentSection === 'contact'
+                    ? 'text-[#F5C400] bg-white/10 ring-1 ring-[#F5C400]/30 shadow-sm'
+                    : 'text-slate-200 hover:text-[#F5C400] hover:bg-white/5'
+                }`}
+              >
+                <span>{getMenu('kontak', 'Kontak').label}</span>
+                {getMenu('kontak', 'Kontak').badge && (
+                  <span className="px-1.5 py-0.2 rounded bg-[#F5C400] text-[#102A56] text-[9px] font-black">
+                    {getMenu('kontak', 'Kontak').badge}
+                  </span>
+                )}
+                {(currentSection === 'kontak' || currentSection === 'contact') && (
+                  <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#F5C400] rounded-full" />
+                )}
+              </button>
+            )}
           </nav>
 
           {/* Action Tools: Search & CTA Button */}
@@ -445,13 +501,15 @@ export const Header = () => {
             </button>
 
             {/* CTA Button: Pendaftaran Calon Anggota */}
-            <button
-              onClick={() => navigateTo('daftar-anggota')}
-              className="flex items-center gap-2 px-3.5 sm:px-5 py-2.5 rounded-xl bg-[#F5C400] hover:bg-[#e6b800] text-[#102A56] font-black text-xs uppercase tracking-wider shadow-lg shadow-[#F5C400]/25 transition-all transform hover:scale-105 active:scale-95"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Daftar Anggota</span>
-            </button>
+            {getMenu('daftar-anggota', 'Daftar Anggota').isEnabled !== false && (
+              <button
+                onClick={() => navigateTo('daftar-anggota')}
+                className="flex items-center gap-2 px-3.5 sm:px-5 py-2.5 rounded-xl bg-[#F5C400] hover:bg-[#e6b800] text-[#102A56] font-black text-xs uppercase tracking-wider shadow-lg shadow-[#F5C400]/25 transition-all transform hover:scale-105 active:scale-95"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>{getMenu('daftar-anggota', 'Daftar Anggota').label}</span>
+              </button>
+            )}
 
             {/* Mobile Hamburger Button */}
             <button
@@ -562,7 +620,7 @@ export const Header = () => {
               </div>
             </div>
 
-            {/* Group 3: Publikasi, Prestasi & Alumni */}
+            {/* Group 3: Publikasi & Prestasi */}
             <div>
               <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 px-1 flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3 text-[#F5C400]" /> Publikasi & Arsip
