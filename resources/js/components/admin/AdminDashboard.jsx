@@ -17,7 +17,8 @@ import {
   Lock,
   Flame,
   Plus,
-  ExternalLink
+  ExternalLink,
+  KeyRound
 } from 'lucide-react';
 
 export const AdminDashboard = () => {
@@ -71,6 +72,13 @@ export const AdminDashboard = () => {
           >
             <Download className="w-4 h-4 text-[#F5C400]" />
             <span>Cadangan Data</span>
+          </button>
+          <button
+            onClick={() => setAdminCurrentTab('pengaturan-sandi')}
+            className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-[#102A56] text-slate-200 hover:text-[#F5C400] font-semibold text-xs border border-slate-700 hover:border-[#F5C400]/40 transition-colors flex items-center gap-1.5"
+          >
+            <KeyRound className="w-4 h-4 text-[#F5C400]" />
+            <span>Ubah Sandi</span>
           </button>
         </div>
       </div>

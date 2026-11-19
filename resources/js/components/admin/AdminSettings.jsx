@@ -23,8 +23,10 @@ import {
   BarChart3,
   ExternalLink,
   UserPlus,
-  MessageCircle
+  MessageCircle,
+  KeyRound
 } from 'lucide-react';
+import { AdminPasswordReset } from './AdminPasswordReset';
 
 export const AdminSettings = () => {
   const {
@@ -327,7 +329,8 @@ export const AdminSettings = () => {
           { id: 'pendaftaran', label: '4. Pendaftaran (GForm & Kontak)', icon: UserPlus },
           { id: 'kontak', label: '5. Kontak & Footer', icon: Phone },
           { id: 'seo', label: '6. SEO & Metadata', icon: Globe },
-          { id: 'database', label: '7. Cadangan & Cloud Aiven', icon: Database }
+          { id: 'database', label: '7. Cadangan & Cloud Aiven', icon: Database },
+          { id: 'sandi', label: '8. Kata Sandi Admin', icon: KeyRound }
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -1239,6 +1242,13 @@ export const AdminSettings = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* TAB 8: PENGATURAN KATA SANDI ADMIN */}
+      {activeTab === 'sandi' && (
+        <div className="pt-2">
+          <AdminPasswordReset />
         </div>
       )}
 

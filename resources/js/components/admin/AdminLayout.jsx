@@ -27,7 +27,8 @@ import {
   Database,
   BookOpen,
   MapPin,
-  Layers
+  Layers,
+  KeyRound
 } from 'lucide-react';
 
 // Admin Tab Components
@@ -47,6 +48,7 @@ import { AdminDiklatsar } from './AdminDiklatsar';
 import { AdminAchievements } from './AdminAchievements';
 import { AdminContact } from './AdminContact';
 import { AdminSettings } from './AdminSettings';
+import { AdminPasswordReset } from './AdminPasswordReset';
 import { AdminAuditLogs } from './AdminAuditLogs';
 
 export const AdminLayout = () => {
@@ -88,6 +90,7 @@ export const AdminLayout = () => {
     { id: 'kontak', label: 'Kontak & Sekretariat', icon: MapPin },
     { id: 'pendaftaran-anggota', label: 'Pendaftaran (GForm & CP)', icon: UserPlus, badge: settings.registrationIsOpen !== false ? 'Aktif' : 'Tutup' },
     { id: 'cms-seo', label: 'Editor Tampilan & SEO', icon: Settings },
+    { id: 'pengaturan-sandi', label: 'Pengaturan Sandi Admin', icon: KeyRound, badge: 'Keamanan' },
     { id: 'audit', label: 'Audit Log & Keamanan', icon: Lock }
   ];
 
@@ -319,6 +322,7 @@ export const AdminLayout = () => {
           {adminCurrentTab === 'prestasi' && <AdminAchievements />}
           {adminCurrentTab === 'kontak' && <AdminContact />}
           {adminCurrentTab === 'cms-seo' && <AdminSettings />}
+          {adminCurrentTab === 'pengaturan-sandi' && <AdminPasswordReset />}
           {adminCurrentTab === 'audit' && <AdminAuditLogs />}
         </main>
       </div>

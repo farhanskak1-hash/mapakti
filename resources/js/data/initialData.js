@@ -141,6 +141,13 @@ export const initialSiteSettings = {
   metaTitle: 'MAPAKTI UPS Tegal — Mahasiswa Pencinta Alam Universitas Pancasakti Tegal',
   metaDescription: 'Website Resmi MAPAKTI Universitas Pancasakti Tegal. Pusat dokumentasi petualangan alam bebas, kegiatan konservasi, info DIKLATSAR, dan pendaftaran anggota baru.',
   metaKeywords: 'MAPAKTI, Mahasiswa Pencinta Alam, UPS Tegal, Diklatsar, Ekspedisi Gunung Slamet, Hutan Gunung, Rock Climbing, Konservasi Sumber Daya Alam, Tegal',
+
+  // Kredensial Administrator (Dapat diubah via Panel Admin)
+  adminAccount: {
+    email: 'admin@mapakti.tegal',
+    password: 'MAPAKTI17JULI',
+    updatedAt: 'Default Awal'
+  }
 };
 
 export const initialProfile = {

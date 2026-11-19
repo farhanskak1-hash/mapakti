@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
-import { ShieldCheck, Lock, Mail, X, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, X, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { Logo } from './Logo';
 
 export const AdminLoginModal = () => {
   const { showLoginModal, setShowLoginModal, loginAdmin } = useData();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!showLoginModal) return null;
@@ -79,13 +80,21 @@ export const AdminLoginModal = () => {
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-950 border border-slate-700 focus:border-[#F5C400] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
+                className="w-full bg-slate-950 border border-slate-700 focus:border-[#F5C400] rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-0.5"
+                title={showPassword ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
@@ -97,16 +106,6 @@ export const AdminLoginModal = () => {
             <ShieldCheck className="w-4 h-4" />
             <span>Masuk ke Panel Administrator</span>
           </button>
-
-          <div className="pt-2 border-t border-slate-800/80 text-center space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-              Kredensial Default Pengurus:
-            </span>
-            <div className="text-[11px] text-slate-300 font-mono bg-slate-950/80 p-2 rounded-xl border border-slate-800">
-              Email: <span className="text-[#F5C400]">admin@mapakti.tegal</span><br />
-              Sandi: <span className="text-[#F5C400]">MAPAKTI17JULI</span> <span className="text-slate-500">(atau admin123)</span>
-            </div>
-          </div>
         </form>
       </div>
     </div>

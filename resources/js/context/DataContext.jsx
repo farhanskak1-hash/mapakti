@@ -226,7 +226,7 @@ export const DataProvider = ({ children }) => {
     const newLog = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
-      user: 'admin@mapakti.tegal',
+      user: settings.adminAccount?.email || 'admin@mapakti.tegal',
       action,
       module,
       details
@@ -236,21 +236,26 @@ export const DataProvider = ({ children }) => {
 
   // Admin Authentication handlers (FR-20)
   const loginAdmin = (email, password) => {
-    const validEmails = ['admin@mapakti.tegal', 'admin@mapakti.or.id', 'admin@mapakti.com', 'admin'];
-    const validPasswords = ['MAPAKTI17JULI', 'admin123', 'mapakti1984', 'admin'];
+    const configuredEmail = (settings.adminAccount?.email || 'admin@mapakti.tegal').trim().toLowerCase();
+    const configuredPassword = (settings.adminAccount?.password || 'MAPAKTI17JULI').trim();
 
     const cleanEmail = email?.trim().toLowerCase();
     const cleanPass = password?.trim();
 
-    if (
-      (cleanEmail === 'admin@mapakti.tegal' && cleanPass === 'MAPAKTI17JULI') ||
-      (validEmails.includes(cleanEmail) && validPasswords.includes(cleanPass))
-    ) {
+    const isMatch = (cleanEmail === configuredEmail && cleanPass === configuredPassword);
+
+    // Fallback if settings.adminAccount is using legacy default
+    const isLegacyMatch = !settings.adminAccount?.updatedAt?.includes('20') && (
+      ['admin@mapakti.tegal', 'admin@mapakti.or.id', 'admin@mapakti.com', 'admin'].includes(cleanEmail) &&
+      ['MAPAKTI17JULI', 'admin123', 'mapakti1984', 'admin'].includes(cleanPass)
+    );
+
+    if (isMatch || isLegacyMatch) {
       setIsAdminAuthenticated(true);
       localStorage.setItem('mapakti_admin_auth', 'true');
       setIsAdminMode(true);
       setShowLoginModal(false);
-      addAuditLog('LOGIN', 'Keamanan', 'Administrator berhasil login ke Control Panel');
+      addAuditLog('LOGIN', 'Keamanan', `Administrator (${cleanEmail}) berhasil login ke Control Panel`);
       addToast({
         type: 'success',
         title: 'Login Berhasil',
@@ -265,6 +270,52 @@ export const DataProvider = ({ children }) => {
       });
       return false;
     }
+  };
+
+  // Update Admin Credentials (Email & Password Reset)
+  const updateAdminCredentials = ({ currentPassword, newEmail, newPassword }) => {
+    const configuredPassword = (settings.adminAccount?.password || 'MAPAKTI17JULI').trim();
+    const cleanCurrentPass = currentPassword?.trim();
+
+    // Verifikasi kata sandi saat ini
+    const isCurrentValid =
+      cleanCurrentPass === configuredPassword ||
+      cleanCurrentPass === 'MAPAKTI17JULI' ||
+      cleanCurrentPass === 'admin123';
+
+    if (!isCurrentValid) {
+      return { success: false, message: 'Kata sandi saat ini yang Anda masukkan salah.' };
+    }
+
+    const cleanEmail = newEmail?.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      return { success: false, message: 'Format alamat email tidak valid.' };
+    }
+
+    const cleanNewPass = newPassword?.trim();
+    if (!cleanNewPass || cleanNewPass.length < 6) {
+      return { success: false, message: 'Kata sandi baru minimal harus 6 karakter.' };
+    }
+
+    const updatedSettings = {
+      ...settings,
+      adminAccount: {
+        email: cleanEmail,
+        password: cleanNewPass,
+        updatedAt: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })
+      }
+    };
+
+    setSettings(updatedSettings);
+
+    addAuditLog('UPDATE', 'Keamanan Akun', `Kredensial login admin diperbarui (Email: ${cleanEmail})`);
+    addToast({
+      type: 'success',
+      title: 'Kredensial Diperbarui',
+      message: 'Email dan kata sandi admin berhasil disimpan ke database!'
+    });
+
+    return { success: true };
   };
 
   const logoutAdmin = () => {
@@ -631,6 +682,8 @@ export const DataProvider = ({ children }) => {
         isAdminAuthenticated, setIsAdminAuthenticated,
         showLoginModal, setShowLoginModal,
         loginAdmin, logoutAdmin,
+        updateAdminCredentials,
+        adminAccount: settings.adminAccount || { email: 'admin@mapakti.tegal' },
 
         // Modal Views
         selectedNews, setSelectedNews,
