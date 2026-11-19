@@ -25,11 +25,35 @@ export const DataProvider = ({ children }) => {
   // (Mencegah tertimpa oleh respons loadFromDb yang lambat)
   const userModifiedCollections = useRef(new Set());
 
-  // Storage Helper yang kebal terhadap QuotaExceededError & membersihkan storage penuh otomatis
+  // Kumpulan key yang SANGAT KRITIS dan TIDAK BOLEH PERNAH DIHAPUS oleh proses pembersihan cache!
+  const PROTECTED_KEYS = new Set([
+    'mapakti_members',
+    'mapakti_settings',
+    'mapakti_admin_account',
+    'mapakti_admin_auth',
+    'mapakti_profile',
+    'mapakti_divisions',
+    'mapakti_periods',
+    'mapakti_members_user_edited',
+    'mapakti_members_updated_at'
+  ]);
+
+  // Storage Helper yang kebal terhadap QuotaExceededError & menjaga data anggota tetap abadi
   const safeSetStorage = (key, data) => {
     if (typeof window === 'undefined') return;
 
     const storageKey = key.startsWith('mapakti_') ? key : `mapakti_${key}`;
+
+    // Log & notifikasi tidak boleh membebani kuota atau mengorbankan data anggota
+    if (key === 'audit_logs' || key === 'notifications') {
+      try {
+        const truncated = Array.isArray(data) ? data.slice(0, 15) : data;
+        localStorage.setItem(storageKey, JSON.stringify(truncated));
+      } catch (e) {
+        // Abaikan dengan senyap tanpa menyentuh key lain
+      }
+      return;
+    }
 
     let serialized = '';
     try {
@@ -45,17 +69,23 @@ export const DataProvider = ({ children }) => {
       console.warn(`[MAPAKTI Storage] QuotaExceededError pada ${storageKey}. Menjalankan pembersihan cache prioritas...`);
 
       try {
-        // Tahap 1: Hapus cache sekunder yang memakan ruang besar
-        const secondaryCaches = [
+        // Tahap 1: Hapus HANYA cache sekunder yang benar-benar tidak esensial
+        const sacrificialKeys = [
           'mapakti_audit_logs',
           'mapakti_notifications',
           'mapakti_gallery',
           'mapakti_news',
           'mapakti_activities',
-          'mapakti_alumni'
+          'mapakti_alumni',
+          'mapakti_diklatsar',
+          'mapakti_achievements',
+          'mapakti_programs',
+          'mapakti_act_regs',
+          'mapakti_mem_regs'
         ];
-        secondaryCaches.forEach((k) => {
-          if (k !== storageKey) {
+
+        sacrificialKeys.forEach((k) => {
+          if (k !== storageKey && !PROTECTED_KEYS.has(k)) {
             try { localStorage.removeItem(k); } catch (e) {}
           }
         });
@@ -65,42 +95,23 @@ export const DataProvider = ({ children }) => {
         return;
       } catch (retryErr) {
         try {
-          // Tahap 2: Jika masih penuh, bersihkan SEMUA key mapakti kecuali auth & settings & target key
-          for (let i = localStorage.length - 1; i >= 0; i--) {
-            const k = localStorage.key(i);
-            if (
-              k &&
-              k.startsWith('mapakti_') &&
-              k !== storageKey &&
-              k !== 'mapakti_admin_account' &&
-              k !== 'mapakti_admin_auth' &&
-              k !== 'mapakti_settings'
-            ) {
-              try { localStorage.removeItem(k); } catch (e) {}
-            }
-          }
-
-          localStorage.setItem(storageKey, serialized);
-          return;
-        } catch (retry2Err) {
-          try {
-            // Tahap 3: Jika data masif karena gambar base64 panjang, pangkas payload gambar di offline cache
-            if (Array.isArray(data)) {
-              const sanitized = data.map((item) => {
-                if (!item || typeof item !== 'object') return item;
-                const copy = { ...item };
-                ['photoUrl', 'imageUrl', 'avatarUrl', 'photo', 'image', 'bannerUrl'].forEach((field) => {
-                  if (typeof copy[field] === 'string' && copy[field].length > 500) {
-                    copy[field] = '';
-                  }
-                });
-                return copy;
+          // Tahap 2: Jika data masif karena gambar base64 panjang, pangkas payload gambar di offline cache
+          // (Data di memori React dan database cloud tetap memegang foto asli 100%)
+          if (Array.isArray(data)) {
+            const sanitized = data.map((item) => {
+              if (!item || typeof item !== 'object') return item;
+              const copy = { ...item };
+              ['photoUrl', 'imageUrl', 'avatarUrl', 'photo', 'image', 'bannerUrl'].forEach((field) => {
+                if (typeof copy[field] === 'string' && copy[field].startsWith('data:image/') && copy[field].length > 1000) {
+                  copy[field] = '';
+                }
               });
-              localStorage.setItem(storageKey, JSON.stringify(sanitized));
-            }
-          } catch (finalErr) {
-            console.warn(`[MAPAKTI Storage] Lewati penyimpanan offline untuk ${storageKey} karena storage browser penuh.`);
+              return copy;
+            });
+            localStorage.setItem(storageKey, JSON.stringify(sanitized));
           }
+        } catch (finalErr) {
+          console.warn(`[MAPAKTI Storage] Storage browser penuh, lewati cache offline untuk ${storageKey}.`);
         }
       }
     }
@@ -162,16 +173,24 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  // Helper to get initial state with highest priority to Server DB (via window.__INITIAL_DATA__)
-  // Ini memastikan saat ganti browser data langsung sinkron dari server database, bukan reset ke default codingan!
+  // Helper to get initial state with highest priority to user's local edits in browser
   const getInitial = (key, fallback) => {
+    // 1. Cek localStorage terlebih dahulu (prioritas pada data terbaru hasil input user)
+    const storedVal = loadStored(key, null);
+    if (storedVal !== null && storedVal !== undefined) {
+      return storedVal;
+    }
+
+    // 2. Jika di localStorage belum ada, gunakan data yang diinjeksi server via window.__INITIAL_DATA__
     if (typeof window !== 'undefined' && window.__INITIAL_DATA__ && window.__INITIAL_DATA__[key] !== undefined) {
       const val = window.__INITIAL_DATA__[key];
       if (val !== null && val !== undefined) {
         return val;
       }
     }
-    return loadStored(key, fallback);
+
+    // 3. Fallback ke data bawaan awal
+    return fallback;
   };
 
   // Flag untuk mencegah efek awal menimpa database dengan data default saat ganti browser
@@ -243,12 +262,17 @@ export const DataProvider = ({ children }) => {
   // Helper to send updates to Database backend (/api/data)
   const syncToApi = async (key, data) => {
     try {
-      await fetch('/api/data', {
+      const res = await fetch('/api/data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ key, data })
       });
-      setIsDbConnected(true);
+      if (res.ok) {
+        setIsDbConnected(true);
+      }
     } catch (e) {
       // Quiet fallback when offline or local without server
     }
@@ -301,7 +325,20 @@ export const DataProvider = ({ children }) => {
           }
           if (d.divisions) setDivisions(d.divisions);
           if (d.periods) setPeriods(d.periods);
-          if (d.members && !userModifiedCollections.current.has('members')) setMembers(d.members);
+          if (d.members && Array.isArray(d.members) && !userModifiedCollections.current.has('members')) {
+            const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_members_user_edited') === 'true';
+            setMembers((currentLocal) => {
+              if (hasLocalEdits && Array.isArray(currentLocal)) {
+                // Jangan timpa jika user sudah memiliki data anggota yang telah diedit/ditambahkan secara lokal
+                if (currentLocal.length >= d.members.length) {
+                  // Pastikan database server juga ikut terupdate dengan data lokal ini
+                  syncToApi('members', currentLocal);
+                  return currentLocal;
+                }
+              }
+              return d.members;
+            });
+          }
           if (d.programs) setPrograms(d.programs);
           if (d.activities) setActivities(d.activities);
           if (d.act_regs) setActivityRegistrations(d.act_regs);
@@ -617,6 +654,10 @@ export const DataProvider = ({ children }) => {
     setMembers((prev) => {
       const nextMembers = typeof updater === 'function' ? updater(prev) : updater;
       safeSetStorage('members', nextMembers);
+      try {
+        localStorage.setItem('mapakti_members_user_edited', 'true');
+        localStorage.setItem('mapakti_members_updated_at', String(Date.now()));
+      } catch (e) {}
       syncToApi('members', nextMembers);
       return nextMembers;
     });
@@ -624,7 +665,7 @@ export const DataProvider = ({ children }) => {
 
   // Privacy toggles (FR-04, FR-13)
   const toggleMemberPublish = (memberId) => {
-    setMembers((prev) =>
+    updateMembers((prev) =>
       prev.map((m) => {
         if (m.id === memberId) {
           const nextVal = !m.isPublished;

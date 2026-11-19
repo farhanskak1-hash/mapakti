@@ -52,8 +52,22 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const pool = getPool();
-  await ensureTables(pool);
+  // Graceful fallback if DATABASE_URL is not configured
+  if (!process.env.DATABASE_URL) {
+    if (req.method === 'GET') {
+      return res.status(200).json({ ok: false, message: 'DATABASE_URL is not configured on server' });
+    }
+    return res.status(200).json({ ok: true, message: 'DATABASE_URL not configured, running in offline mode' });
+  }
+
+  let pool;
+  try {
+    pool = getPool();
+    await ensureTables(pool);
+  } catch (dbInitErr) {
+    console.error('Database connection failed:', dbInitErr.message);
+    return res.status(200).json({ ok: false, message: 'Database connection failed: ' + dbInitErr.message });
+  }
 
   try {
     if (req.method === 'GET') {
