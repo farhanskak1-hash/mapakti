@@ -35,6 +35,16 @@
         "badge": "Divisi Konservasi Sumber Daya Alam"
       }
     ],
+    "stats": {
+      "activeMembers": "50+",
+      "membersLabel": "Anggota & Kader",
+      "divisions": "3",
+      "divisionsLabel": "Divisi Operasional",
+      "expeditions": "40+",
+      "expeditionsLabel": "Ekspedisi Sukses",
+      "achievements": "15+",
+      "achievementsLabel": "Rekor Prestasi"
+    },
     "announcementTicker": "PENGUMUMAN: Pendaftaran DIKLATSAR Calon Anggota Baru Gelombang I Tahun 2025 resmi DIBUKA! Pendaftaran online dapat diakses melalui menu \"Pendaftaran Anggota\". | Selamat atas suksesnya Ekspedisi Konservasi Mangrove Pesisir Tegal.",
     "secretariatAddress": "Gedung Pusat Kegiatan Mahasiswa (PKM) Lt. 1, Universitas Pancasakti Tegal, Jl. Halmahera KM. 1, Mintaragen, Kec. Tegal Timur, Kota Tegal, Jawa Tengah 52121",
     "email": "sekretariat@mapakti.or.id",

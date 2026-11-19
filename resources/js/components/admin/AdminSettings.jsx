@@ -34,6 +34,10 @@ export const AdminSettings = () => {
     setSettings,
     profile,
     setProfile,
+    members,
+    divisions,
+    activities,
+    achievements,
     isDbConnected,
     exportBackupJson,
     restoreBackupJson,
@@ -82,13 +86,15 @@ export const AdminSettings = () => {
       }
     ],
 
-    // Stats Counters
+    // Stats Counters (4 Cards)
     stats: {
-      activeMembers: settings.stats?.activeMembers || '350',
-      membersLabel: settings.stats?.membersLabel || 'Kader Rimbawan',
-      expeditions: settings.stats?.expeditions || '48',
+      activeMembers: settings.stats?.activeMembers || (members?.length ? `${members.length}+` : '50+'),
+      membersLabel: settings.stats?.membersLabel || 'Anggota & Kader',
+      divisions: settings.stats?.divisions || (divisions?.length ? `${divisions.length}` : '3'),
+      divisionsLabel: settings.stats?.divisionsLabel || 'Divisi Operasional',
+      expeditions: settings.stats?.expeditions || (activities?.length ? `${activities.length}+` : '40+'),
       expeditionsLabel: settings.stats?.expeditionsLabel || 'Ekspedisi Sukses',
-      achievements: settings.stats?.achievements || '18',
+      achievements: settings.stats?.achievements || (achievements?.length ? `${achievements.length}` : '15+'),
       achievementsLabel: settings.stats?.achievementsLabel || 'Rekor Prestasi'
     },
 
@@ -494,38 +500,89 @@ export const AdminSettings = () => {
           <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
             <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2 text-[#F5C400]">
               <BarChart3 className="w-4 h-4" />
-              Angka Statistik di Strip Beranda (Counter KPI)
+              Angka Statistik di Strip Beranda (4 Counter KPI)
             </h3>
             <p className="text-[11px] text-slate-400">
-              Angka dan label yang tampil di kotak ringkasan beranda tepat di bawah hero slide banner.
+              Angka dan label yang tampil di kotak ringkasan 4 kartu statistik di beranda tepat di bawah hero slide banner. Anda dapat mengetik angka bebas (misal "50+", "100%") atau mengklik tombol "Set Riil" untuk sinkron dengan data database.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+              {/* Card 1 */}
               <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                <label className="block font-bold text-slate-300">Total Anggota & Kader</label>
+                <div className="flex items-center justify-between">
+                  <label className="block font-bold text-slate-300">1. Anggota & Kader</label>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, stats: { ...formData.stats, activeMembers: `${members?.length || 0}+` } })}
+                    className="text-[10px] text-[#F5C400] hover:underline"
+                    title="Gunakan total data anggota saat ini"
+                  >
+                    Set Riil ({members?.length || 0}+)
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={formData.stats.activeMembers}
                   onChange={(e) => setFormData({ ...formData, stats: { ...formData.stats, activeMembers: e.target.value } })}
-                  placeholder="350+"
+                  placeholder="50+"
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:border-[#F5C400] focus:outline-none"
                 />
                 <input
                   type="text"
                   value={formData.stats.membersLabel}
                   onChange={(e) => setFormData({ ...formData, stats: { ...formData.stats, membersLabel: e.target.value } })}
-                  placeholder="Kader Rimbawan"
+                  placeholder="Anggota & Kader"
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-400 text-[11px]"
                 />
               </div>
 
+              {/* Card 2 */}
               <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                <label className="block font-bold text-slate-300">Total Ekspedisi Sukses</label>
+                <div className="flex items-center justify-between">
+                  <label className="block font-bold text-slate-300">2. Divisi Operasional</label>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, stats: { ...formData.stats, divisions: `${divisions?.length || 3}` } })}
+                    className="text-[10px] text-[#F5C400] hover:underline"
+                    title="Gunakan total divisi saat ini"
+                  >
+                    Set Riil ({divisions?.length || 3})
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={formData.stats.divisions}
+                  onChange={(e) => setFormData({ ...formData, stats: { ...formData.stats, divisions: e.target.value } })}
+                  placeholder="3"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:border-[#F5C400] focus:outline-none"
+                />
+                <input
+                  type="text"
+                  value={formData.stats.divisionsLabel}
+                  onChange={(e) => setFormData({ ...formData, stats: { ...formData.stats, divisionsLabel: e.target.value } })}
+                  placeholder="Divisi Operasional"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-400 text-[11px]"
+                />
+              </div>
+
+              {/* Card 3 */}
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block font-bold text-slate-300">3. Ekspedisi Sukses</label>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, stats: { ...formData.stats, expeditions: `${activities?.length || 0}+` } })}
+                    className="text-[10px] text-[#F5C400] hover:underline"
+                    title="Gunakan total kegiatan saat ini"
+                  >
+                    Set Riil ({activities?.length || 0}+)
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={formData.stats.expeditions}
                   onChange={(e) => setFormData({ ...formData, stats: { ...formData.stats, expeditions: e.target.value } })}
-                  placeholder="48+"
+                  placeholder="40+"
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:border-[#F5C400] focus:outline-none"
                 />
                 <input
@@ -537,13 +594,24 @@ export const AdminSettings = () => {
                 />
               </div>
 
+              {/* Card 4 */}
               <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                <label className="block font-bold text-slate-300">Total Rekor Prestasi</label>
+                <div className="flex items-center justify-between">
+                  <label className="block font-bold text-slate-300">4. Rekor Prestasi</label>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, stats: { ...formData.stats, achievements: `${achievements?.length || 0}` } })}
+                    className="text-[10px] text-[#F5C400] hover:underline"
+                    title="Gunakan total prestasi saat ini"
+                  >
+                    Set Riil ({achievements?.length || 0})
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={formData.stats.achievements}
                   onChange={(e) => setFormData({ ...formData, stats: { ...formData.stats, achievements: e.target.value } })}
-                  placeholder="18"
+                  placeholder="15+"
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:border-[#F5C400] focus:outline-none"
                 />
                 <input

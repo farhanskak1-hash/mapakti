@@ -167,8 +167,12 @@ export const HomeSection = () => {
               <Users className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-white">{publicMembersCount + 40}+</div>
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Anggota & Kader</div>
+              <div className="text-2xl sm:text-3xl font-black text-white">
+                {settings.stats?.activeMembers || (members?.length ? `${members.length}+` : '50+')}
+              </div>
+              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                {settings.stats?.membersLabel || 'Anggota & Kader'}
+              </div>
             </div>
           </div>
 
@@ -177,8 +181,12 @@ export const HomeSection = () => {
               <Compass className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-[#F5C400]">{divisions.length}</div>
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Divisi Operasional</div>
+              <div className="text-2xl sm:text-3xl font-black text-[#F5C400]">
+                {settings.stats?.divisions || (divisions?.length ? `${divisions.length}` : '3')}
+              </div>
+              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                {settings.stats?.divisionsLabel || 'Divisi Operasional'}
+              </div>
             </div>
           </div>
 
@@ -187,8 +195,12 @@ export const HomeSection = () => {
               <Calendar className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-white">{activities.length + 35}+</div>
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Ekspedisi Sukses</div>
+              <div className="text-2xl sm:text-3xl font-black text-white">
+                {settings.stats?.expeditions || (activities?.length ? `${activities.length}+` : '40+')}
+              </div>
+              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                {settings.stats?.expeditionsLabel || 'Ekspedisi Sukses'}
+              </div>
             </div>
           </div>
 
@@ -197,8 +209,12 @@ export const HomeSection = () => {
               <Award className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-[#F5C400]">{achievements.length}</div>
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Rekor Prestasi</div>
+              <div className="text-2xl sm:text-3xl font-black text-[#F5C400]">
+                {settings.stats?.achievements || (achievements?.length ? `${achievements.length}` : '15+')}
+              </div>
+              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                {settings.stats?.achievementsLabel || 'Rekor Prestasi'}
+              </div>
             </div>
           </div>
         </div>

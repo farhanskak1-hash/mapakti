@@ -18,7 +18,16 @@ import {
 } from 'lucide-react';
 
 export const AdminHome = () => {
-  const { settings, setSettings, addAuditLog, addToast } = useData();
+  const {
+    settings,
+    setSettings,
+    members,
+    divisions,
+    activities,
+    achievements,
+    addAuditLog,
+    addToast
+  } = useData();
 
   const [activeTab, setActiveTab] = useState('hero-slides');
 
@@ -50,13 +59,15 @@ export const AdminHome = () => {
     chairmanGreeting: settings.chairmanGreeting || '',
     chairmanPhotoUrl: settings.chairmanPhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
 
-    // Stats Counters
+    // Stats Counters (4 Cards)
     stats: {
-      activeMembers: settings.stats?.activeMembers || '350',
-      membersLabel: settings.stats?.membersLabel || 'Kader Rimbawan',
-      expeditions: settings.stats?.expeditions || '48',
+      activeMembers: settings.stats?.activeMembers || (members?.length ? `${members.length}+` : '50+'),
+      membersLabel: settings.stats?.membersLabel || 'Anggota & Kader',
+      divisions: settings.stats?.divisions || (divisions?.length ? `${divisions.length}` : '3'),
+      divisionsLabel: settings.stats?.divisionsLabel || 'Divisi Operasional',
+      expeditions: settings.stats?.expeditions || (activities?.length ? `${activities.length}+` : '40+'),
       expeditionsLabel: settings.stats?.expeditionsLabel || 'Ekspedisi Sukses',
-      achievements: settings.stats?.achievements || '18',
+      achievements: settings.stats?.achievements || (achievements?.length ? `${achievements.length}` : '15+'),
       achievementsLabel: settings.stats?.achievementsLabel || 'Rekor Prestasi'
     }
   });
@@ -381,16 +392,35 @@ export const AdminHome = () => {
         {/* TAB 4: STATISTIK COUNTER */}
         {activeTab === 'statistik' && (
           <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex items-center gap-2 text-[#F5C400] text-xs font-bold uppercase tracking-wider border-b border-slate-800 pb-3">
-              <BarChart3 className="w-4 h-4" /> Counter Angka Statistik Beranda
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2 text-[#F5C400] text-xs font-bold uppercase tracking-wider">
+                <BarChart3 className="w-4 h-4" /> 4 Kartu Counter Angka Statistik Beranda
+              </div>
+              <span className="text-[11px] text-slate-400">Tampil di halaman depan bawah hero banner</span>
             </div>
             <p className="text-xs text-slate-400">
-              Angka pencapaian yang tampil pada pita statistik di halaman utama.
+              Ubah angka pencapaian dan label teks yang tampil pada pita 4 kartu statistik di halaman beranda. Anda dapat mengetik angka bebas (misal "500+", "100%") atau mengklik tombol "Set Riil" untuk menyesuaikan otomatis dengan data database.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+              {/* Card 1: Anggota & Kader */}
               <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-2">
-                <label className="block font-semibold text-slate-300">Total Kader / Anggota</label>
+                <div className="flex items-center justify-between">
+                  <label className="block font-semibold text-slate-300">1. Anggota & Kader</label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        stats: { ...formData.stats, activeMembers: `${members?.length || 0}+` }
+                      })
+                    }
+                    className="text-[10px] text-[#F5C400] hover:underline"
+                    title="Gunakan total data anggota saat ini"
+                  >
+                    Set Riil ({members?.length || 0}+)
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={formData.stats.activeMembers}
@@ -411,13 +441,72 @@ export const AdminHome = () => {
                       stats: { ...formData.stats, membersLabel: e.target.value }
                     })
                   }
-                  placeholder="Label: Kader Rimbawan"
+                  placeholder="Label: Anggota & Kader"
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-[11px] text-slate-400 focus:outline-none"
                 />
               </div>
 
+              {/* Card 2: Divisi Operasional */}
               <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-2">
-                <label className="block font-semibold text-slate-300">Total Ekspedisi Alam Bebas</label>
+                <div className="flex items-center justify-between">
+                  <label className="block font-semibold text-slate-300">2. Divisi Operasional</label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        stats: { ...formData.stats, divisions: `${divisions?.length || 3}` }
+                      })
+                    }
+                    className="text-[10px] text-[#F5C400] hover:underline"
+                    title="Gunakan total divisi saat ini"
+                  >
+                    Set Riil ({divisions?.length || 3})
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={formData.stats.divisions}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      stats: { ...formData.stats, divisions: e.target.value }
+                    })
+                  }
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:border-[#F5C400]"
+                />
+                <input
+                  type="text"
+                  value={formData.stats.divisionsLabel}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      stats: { ...formData.stats, divisionsLabel: e.target.value }
+                    })
+                  }
+                  placeholder="Label: Divisi Operasional"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-[11px] text-slate-400 focus:outline-none"
+                />
+              </div>
+
+              {/* Card 3: Ekspedisi Sukses */}
+              <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block font-semibold text-slate-300">3. Ekspedisi Sukses</label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        stats: { ...formData.stats, expeditions: `${activities?.length || 0}+` }
+                      })
+                    }
+                    className="text-[10px] text-[#F5C400] hover:underline"
+                    title="Gunakan total kegiatan saat ini"
+                  >
+                    Set Riil ({activities?.length || 0}+)
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={formData.stats.expeditions}
@@ -443,8 +532,24 @@ export const AdminHome = () => {
                 />
               </div>
 
+              {/* Card 4: Rekor Prestasi */}
               <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-2">
-                <label className="block font-semibold text-slate-300">Total Rekor Prestasi</label>
+                <div className="flex items-center justify-between">
+                  <label className="block font-semibold text-slate-300">4. Rekor Prestasi</label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        stats: { ...formData.stats, achievements: `${achievements?.length || 0}` }
+                      })
+                    }
+                    className="text-[10px] text-[#F5C400] hover:underline"
+                    title="Gunakan total rekor prestasi saat ini"
+                  >
+                    Set Riil ({achievements?.length || 0})
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={formData.stats.achievements}

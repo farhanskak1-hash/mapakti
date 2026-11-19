@@ -84,6 +84,18 @@ export const initialSiteSettings = {
     }
   ],
 
+  // Counter Angka Statistik Beranda
+  stats: {
+    activeMembers: '50+',
+    membersLabel: 'Anggota & Kader',
+    divisions: '3',
+    divisionsLabel: 'Divisi Operasional',
+    expeditions: '40+',
+    expeditionsLabel: 'Ekspedisi Sukses',
+    achievements: '15+',
+    achievementsLabel: 'Rekor Prestasi'
+  },
+
   // Running Ticker (FR-01)
   announcementTicker: 'PENGUMUMAN: Pendaftaran DIKLATSAR Calon Anggota Baru Gelombang I Tahun 2025 resmi DIBUKA! Pendaftaran online dapat diakses melalui menu "Pendaftaran Anggota". | Selamat atas suksesnya Ekspedisi Konservasi Mangrove Pesisir Tegal.',
 
