@@ -26,6 +26,13 @@ export const AdminPasswordReset = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  // Sync email if settings updates
+  React.useEffect(() => {
+    if (settings.adminAccount?.email) {
+      setEmail(settings.adminAccount.email);
+    }
+  }, [settings.adminAccount?.email]);
+
   const [showCurrentPass, setShowCurrentPass] = useState(false);
   const [showNewPass, setShowNewPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);

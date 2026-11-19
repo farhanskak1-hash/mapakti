@@ -146,7 +146,8 @@ export const initialSiteSettings = {
   adminAccount: {
     email: 'admin@mapakti.tegal',
     password: 'MAPAKTI17JULI',
-    updatedAt: 'Default Awal'
+    isCustom: false,
+    updatedAt: 'Bawaan Default'
   }
 };
 

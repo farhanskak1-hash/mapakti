@@ -31,8 +31,20 @@ export const DataProvider = ({ children }) => {
       if (key === 'divisions' && Array.isArray(parsed) && parsed.length !== 3) {
         return fallback;
       }
-      if (key === 'settings' && parsed && parsed.heroSlides && parsed.heroSlides.length !== 3) {
-        return { ...parsed, heroSlides: fallback.heroSlides };
+      if (key === 'settings' && parsed) {
+        if (parsed.heroSlides && parsed.heroSlides.length !== 3) {
+          parsed.heroSlides = fallback.heroSlides;
+        }
+        if (!parsed.adminAccount) {
+          try {
+            const rawAcc = localStorage.getItem('mapakti_admin_account');
+            if (rawAcc) parsed.adminAccount = JSON.parse(rawAcc);
+          } catch (e) {}
+        }
+        if (!parsed.adminAccount) {
+          parsed.adminAccount = fallback.adminAccount;
+        }
+        return parsed;
       }
       // Auto-migrate members to strictly 3 types: Anggota Tetap, Anggota Luar Biasa, Anggota Muda
       if (key === 'members' && Array.isArray(parsed)) {
@@ -157,7 +169,28 @@ export const DataProvider = ({ children }) => {
         const resData = await res.json();
         if (active && resData && resData.ok && resData.data) {
           const d = resData.data;
-          if (d.settings && typeof d.settings === 'object') setSettings(d.settings);
+          if (d.settings && typeof d.settings === 'object') {
+            setSettings((prev) => {
+              let localAcc = prev?.adminAccount;
+              if (!localAcc?.isCustom && typeof window !== 'undefined') {
+                try {
+                  const rawAcc = localStorage.getItem('mapakti_admin_account');
+                  if (rawAcc) localAcc = JSON.parse(rawAcc);
+                } catch (e) {}
+              }
+
+              if (localAcc?.isCustom && !d.settings.adminAccount?.isCustom) {
+                const merged = { ...d.settings, adminAccount: localAcc };
+                syncToApi('settings', merged);
+                return merged;
+              }
+
+              return {
+                ...d.settings,
+                adminAccount: d.settings.adminAccount || localAcc || initialSiteSettings.adminAccount
+              };
+            });
+          }
           if (d.profile) setProfile(d.profile);
           if (d.divisions) setDivisions(d.divisions);
           if (d.periods) setPeriods(d.periods);
@@ -236,21 +269,26 @@ export const DataProvider = ({ children }) => {
 
   // Admin Authentication handlers (FR-20)
   const loginAdmin = (email, password) => {
-    const configuredEmail = (settings.adminAccount?.email || 'admin@mapakti.tegal').trim().toLowerCase();
-    const configuredPassword = (settings.adminAccount?.password || 'MAPAKTI17JULI').trim();
+    // Ambil akun admin aktif: prioritas dari state settings, lalu fallback ke localStorage
+    let activeAccount = settings?.adminAccount;
+    if (!activeAccount?.password && typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('mapakti_admin_account');
+        if (stored) activeAccount = JSON.parse(stored);
+      } catch (e) {}
+    }
+
+    const configuredEmail = (activeAccount?.email || 'admin@mapakti.tegal').trim().toLowerCase();
+    const configuredPassword = (activeAccount?.password || 'MAPAKTI17JULI').trim();
 
     const cleanEmail = email?.trim().toLowerCase();
     const cleanPass = password?.trim();
 
+    // HANYA COCOKKAN DENGAN KREDENSIAL YANG SEDANG AKTIF SAAT INI!
+    // KATA SANDI LAMA TIDAK BOLEH BISA DIGUNAKAN LAGI SAMA SEKALI!
     const isMatch = (cleanEmail === configuredEmail && cleanPass === configuredPassword);
 
-    // Fallback if settings.adminAccount is using legacy default
-    const isLegacyMatch = !settings.adminAccount?.updatedAt?.includes('20') && (
-      ['admin@mapakti.tegal', 'admin@mapakti.or.id', 'admin@mapakti.com', 'admin'].includes(cleanEmail) &&
-      ['MAPAKTI17JULI', 'admin123', 'mapakti1984', 'admin'].includes(cleanPass)
-    );
-
-    if (isMatch || isLegacyMatch) {
+    if (isMatch) {
       setIsAdminAuthenticated(true);
       localStorage.setItem('mapakti_admin_auth', 'true');
       setIsAdminMode(true);
@@ -266,7 +304,7 @@ export const DataProvider = ({ children }) => {
       addToast({
         type: 'error',
         title: 'Login Gagal',
-        message: 'Kombinasi email atau kata sandi tidak valid!'
+        message: 'Email atau kata sandi tidak sesuai. Jika baru saja mengubah sandi, gunakan kata sandi baru Anda!'
       });
       return false;
     }
@@ -274,16 +312,19 @@ export const DataProvider = ({ children }) => {
 
   // Update Admin Credentials (Email & Password Reset)
   const updateAdminCredentials = ({ currentPassword, newEmail, newPassword }) => {
-    const configuredPassword = (settings.adminAccount?.password || 'MAPAKTI17JULI').trim();
+    let activeAccount = settings?.adminAccount;
+    if (!activeAccount?.password && typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('mapakti_admin_account');
+        if (stored) activeAccount = JSON.parse(stored);
+      } catch (e) {}
+    }
+
+    const configuredPassword = (activeAccount?.password || 'MAPAKTI17JULI').trim();
     const cleanCurrentPass = currentPassword?.trim();
 
-    // Verifikasi kata sandi saat ini
-    const isCurrentValid =
-      cleanCurrentPass === configuredPassword ||
-      cleanCurrentPass === 'MAPAKTI17JULI' ||
-      cleanCurrentPass === 'admin123';
-
-    if (!isCurrentValid) {
+    // Verifikasi kata sandi saat ini: wajib sama persis dengan kata sandi yang sedang aktif
+    if (cleanCurrentPass !== configuredPassword) {
       return { success: false, message: 'Kata sandi saat ini yang Anda masukkan salah.' };
     }
 
@@ -297,22 +338,46 @@ export const DataProvider = ({ children }) => {
       return { success: false, message: 'Kata sandi baru minimal harus 6 karakter.' };
     }
 
+    if (cleanNewPass === configuredPassword) {
+      return { success: false, message: 'Kata sandi baru tidak boleh sama dengan kata sandi lama.' };
+    }
+
+    const nowFormatted = new Date().toLocaleString('id-ID', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const updatedAccount = {
+      email: cleanEmail,
+      password: cleanNewPass,
+      isCustom: true,
+      updatedAt: nowFormatted
+    };
+
     const updatedSettings = {
       ...settings,
-      adminAccount: {
-        email: cleanEmail,
-        password: cleanNewPass,
-        updatedAt: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })
-      }
+      adminAccount: updatedAccount
     };
 
     setSettings(updatedSettings);
 
-    addAuditLog('UPDATE', 'Keamanan Akun', `Kredensial login admin diperbarui (Email: ${cleanEmail})`);
+    // Simpan seketika ke LocalStorage untuk memastikan sesi browser langsung terupdate
+    try {
+      localStorage.setItem('mapakti_settings', JSON.stringify(updatedSettings));
+      localStorage.setItem('mapakti_admin_account', JSON.stringify(updatedAccount));
+    } catch (e) {}
+
+    // Sinkronkan ke database server backend
+    syncToApi('settings', updatedSettings);
+
+    addAuditLog('UPDATE', 'Keamanan Akun', `Kata sandi administrator diperbarui (Email: ${cleanEmail}). Kredensial lama dinonaktifkan.`);
     addToast({
       type: 'success',
-      title: 'Kredensial Diperbarui',
-      message: 'Email dan kata sandi admin berhasil disimpan ke database!'
+      title: 'Kata Sandi Diperbarui',
+      message: 'Kata sandi baru berhasil aktif. Kata sandi lama sudah dinonaktifkan permanen.'
     });
 
     return { success: true };
