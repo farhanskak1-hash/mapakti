@@ -70,7 +70,7 @@ export const AdminMembers = () => {
     achievements: '',
     phone: '',
     email: '',
-    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'
+    photoUrl: ''
   });
 
   // Calculate statistics
@@ -108,7 +108,7 @@ export const AdminMembers = () => {
       achievements: 'Pernah mengikuti ekspedisi navigasi rimba',
       phone: '085812345678',
       email: 'anggota@mapakti.or.id',
-      photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'
+      photoUrl: ''
     });
     setShowModal(true);
   };
@@ -119,7 +119,8 @@ export const AdminMembers = () => {
       ...m,
       membershipStatus: ['Anggota Tetap', 'Anggota Luar Biasa', 'Anggota Muda'].includes(m.membershipStatus)
         ? m.membershipStatus
-        : 'Anggota Tetap'
+        : 'Anggota Tetap',
+      photoUrl: m.photoUrl || ''
     });
     setShowModal(true);
   };
@@ -897,7 +898,7 @@ export const AdminMembers = () => {
                       <td className="px-5 py-3.5 font-bold text-white whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <img
-                            src={m.photoUrl}
+                            src={m.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'}
                             alt={m.name}
                             className="w-9 h-9 rounded-full object-cover border border-slate-700 flex-shrink-0"
                             onError={(e) => {
@@ -1365,10 +1366,10 @@ export const AdminMembers = () => {
                   value={formData.photoUrl}
                   onChange={(url) => setFormData({ ...formData, photoUrl: url })}
                   label="Foto Profil Anggota"
-                  hint="Klik tombol untuk memilih berkas foto dari komputer / smartphone"
+                  hint="Pilih berkas foto profil anggota (otomatis dikompresi ringan & tajam)"
                   aspectRatio="aspect-square"
-                  maxWidth={480}
-                  maxHeight={480}
+                  maxWidth={320}
+                  maxHeight={320}
                   quality={0.7}
                 />
               </div>

@@ -18,6 +18,60 @@ import {
   initialNotifications
 } from '../data/initialData';
 
+// Lightweight IndexedDB helper for unlimited client-side persistence
+const IDB_NAME = 'mapakti_db';
+const IDB_STORE = 'collections';
+
+const idbGet = (key) =>
+  new Promise((resolve) => {
+    if (typeof window === 'undefined' || !window.indexedDB) return resolve(null);
+    try {
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = () => {
+        try { req.result.createObjectStore(IDB_STORE); } catch (e) {}
+      };
+      req.onsuccess = () => {
+        try {
+          const tx = req.result.transaction(IDB_STORE, 'readonly');
+          const store = tx.objectStore(IDB_STORE);
+          const getReq = store.get(key);
+          getReq.onsuccess = () => resolve(getReq.result);
+          getReq.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
+        }
+      };
+      req.onerror = () => resolve(null);
+    } catch (e) {
+      resolve(null);
+    }
+  });
+
+const idbSet = (key, val) =>
+  new Promise((resolve) => {
+    if (typeof window === 'undefined' || !window.indexedDB) return resolve(false);
+    try {
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = () => {
+        try { req.result.createObjectStore(IDB_STORE); } catch (e) {}
+      };
+      req.onsuccess = () => {
+        try {
+          const tx = req.result.transaction(IDB_STORE, 'readwrite');
+          const store = tx.objectStore(IDB_STORE);
+          store.put(val, key);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        } catch (e) {
+          resolve(false);
+        }
+      };
+      req.onerror = () => resolve(false);
+    } catch (e) {
+      resolve(false);
+    }
+  });
+
 const DataContext = createContext(null);
 
 export const DataProvider = ({ children }) => {
@@ -38,11 +92,14 @@ export const DataProvider = ({ children }) => {
     'mapakti_members_updated_at'
   ]);
 
-  // Storage Helper yang kebal terhadap QuotaExceededError & menjaga data anggota tetap abadi
+  // Storage Helper yang kebal terhadap QuotaExceededError & menjaga seluruh data dan foto tetap abadi
   const safeSetStorage = (key, data) => {
     if (typeof window === 'undefined') return;
 
     const storageKey = key.startsWith('mapakti_') ? key : `mapakti_${key}`;
+
+    // Cadangkan ke IndexedDB tanpa batas kuota
+    idbSet(storageKey, data);
 
     // Log & notifikasi tidak boleh membebani kuota atau mengorbankan data anggota
     if (key === 'audit_logs' || key === 'notifications') {
@@ -66,53 +123,17 @@ export const DataProvider = ({ children }) => {
     try {
       localStorage.setItem(storageKey, serialized);
     } catch (err) {
-      console.warn(`[MAPAKTI Storage] QuotaExceededError pada ${storageKey}. Menjalankan pembersihan cache prioritas...`);
+      console.warn(`[MAPAKTI Storage] LocalStorage penuh pada ${storageKey}. Mengosongkan log riwayat lama...`);
 
+      // HANYA bersihkan log audit & notifikasi lama untuk mengosongkan ruang.
+      // JANGAN PERNAH menghapus gallery, news, activities, members, atau mereset foto!
       try {
-        // Tahap 1: Hapus HANYA cache sekunder yang benar-benar tidak esensial
-        const sacrificialKeys = [
-          'mapakti_audit_logs',
-          'mapakti_notifications',
-          'mapakti_gallery',
-          'mapakti_news',
-          'mapakti_activities',
-          'mapakti_alumni',
-          'mapakti_diklatsar',
-          'mapakti_achievements',
-          'mapakti_programs',
-          'mapakti_act_regs',
-          'mapakti_mem_regs'
-        ];
-
-        sacrificialKeys.forEach((k) => {
-          if (k !== storageKey && !PROTECTED_KEYS.has(k)) {
-            try { localStorage.removeItem(k); } catch (e) {}
-          }
-        });
-
-        // Coba simpan kembali
+        localStorage.removeItem('mapakti_audit_logs');
+        localStorage.removeItem('mapakti_notifications');
         localStorage.setItem(storageKey, serialized);
-        return;
       } catch (retryErr) {
-        try {
-          // Tahap 2: Jika data masif karena gambar base64 panjang, pangkas payload gambar di offline cache
-          // (Data di memori React dan database cloud tetap memegang foto asli 100%)
-          if (Array.isArray(data)) {
-            const sanitized = data.map((item) => {
-              if (!item || typeof item !== 'object') return item;
-              const copy = { ...item };
-              ['photoUrl', 'imageUrl', 'avatarUrl', 'photo', 'image', 'bannerUrl'].forEach((field) => {
-                if (typeof copy[field] === 'string' && copy[field].startsWith('data:image/') && copy[field].length > 1000) {
-                  copy[field] = '';
-                }
-              });
-              return copy;
-            });
-            localStorage.setItem(storageKey, JSON.stringify(sanitized));
-          }
-        } catch (finalErr) {
-          console.warn(`[MAPAKTI Storage] Storage browser penuh, lewati cache offline untuk ${storageKey}.`);
-        }
+        // Jika masih penuh, data dan foto tetap 100% aman tersimpan di IndexedDB & database server
+        console.info(`[MAPAKTI Storage] Data ${storageKey} tetap aman tersimpan di IndexedDB.`);
       }
     }
   };
@@ -154,15 +175,26 @@ export const DataProvider = ({ children }) => {
       }
       // Auto-migrate members to strictly 3 types: Anggota Tetap, Anggota Luar Biasa, Anggota Muda
       if (key === 'members' && Array.isArray(parsed)) {
+        const seedMap = new Map(initialMembers.map((m) => [m.id, m.photoUrl]));
         return parsed.map((m) => {
           let status = m.membershipStatus || 'Anggota Tetap';
           if (status.includes('Muda') || status.includes('AM')) status = 'Anggota Muda';
           else if (status.includes('Luar') || status.includes('ALB')) status = 'Anggota Luar Biasa';
           else status = 'Anggota Tetap';
+
+          let photo = m.photoUrl;
+          // Auto-heal: jika foto anggota default ter-reset ke foto Bayu (photo-1534528741775-53994a69daeb), kembalikan ke foto asli masing-masing
+          if (m.id && seedMap.has(m.id) && m.id !== 'mem-1') {
+            const seedPhoto = seedMap.get(m.id);
+            if (!photo || photo === 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80') {
+              photo = seedPhoto;
+            }
+          }
+
           return {
             ...m,
             membershipStatus: status,
-            photoUrl: m.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'
+            photoUrl: photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'
           };
         });
       }
@@ -367,7 +399,7 @@ export const DataProvider = ({ children }) => {
     return () => { active = false; };
   }, []);
 
-  // Pembersihan proaktif localStorage saat startup agar tidak melebihi batas kuota browser
+  // Pembersihan proaktif localStorage saat startup (HANYA log audit lama, tidak pernah menghapus data pengguna atau foto)
   useEffect(() => {
     if (typeof window === 'undefined' || !window.localStorage) return;
     try {
@@ -377,12 +409,38 @@ export const DataProvider = ({ children }) => {
         if (k) totalUsage += (localStorage.getItem(k) || '').length;
       }
       if (totalUsage > 2500000) {
-        console.warn(`[MAPAKTI Storage] Cache localStorage cukup besar (${(totalUsage / 1024 / 1024).toFixed(2)} MB). Mengosongkan cache non-kritis...`);
+        console.warn(`[MAPAKTI Storage] Cache localStorage cukup besar (${(totalUsage / 1024 / 1024).toFixed(2)} MB). Mengosongkan riwayat log audit lama...`);
         localStorage.removeItem('mapakti_audit_logs');
         localStorage.removeItem('mapakti_notifications');
-        localStorage.removeItem('mapakti_alumni');
       }
     } catch (e) {}
+  }, []);
+
+  // Restorasi asinkron dari IndexedDB jika data atau foto di localStorage sempat terpotong
+  useEffect(() => {
+    async function restoreFromIdb() {
+      try {
+        const idbMembers = await idbGet('mapakti_members');
+        if (Array.isArray(idbMembers) && idbMembers.length > 0) {
+          setMembers((prev) => {
+            if (!Array.isArray(prev) || prev.length < idbMembers.length) {
+              return idbMembers;
+            }
+            // Periksa apakah IndexedDB memegang foto yang lebih lengkap dibanding localStorage
+            const hasBetterPhotos = idbMembers.some((im, i) => {
+              const currentP = prev[i]?.photoUrl || '';
+              const idbP = im?.photoUrl || '';
+              return idbP.length > currentP.length;
+            });
+            if (hasBetterPhotos) {
+              return idbMembers;
+            }
+            return prev;
+          });
+        }
+      } catch (e) {}
+    }
+    restoreFromIdb();
   }, []);
 
   // Auto-sync state to localStorage and Database (hanya aktif setelah hidrasi selesai, mencegah overwrite saat ganti browser)

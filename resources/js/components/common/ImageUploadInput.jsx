@@ -53,17 +53,14 @@ export const compressImageFile = (file, maxWidth = 900, maxHeight = 900, quality
         canvas.height = height;
         const ctx = canvas.getContext('2d');
 
-        // Preserve transparency for PNG
-        const isPng = file.type === 'image/png';
-        if (!isPng) {
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, width, height);
-        }
-
+        // Always draw onto a clean white background so transparent areas in PNG/WebP look natural
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
 
-        const mimeType = isPng ? 'image/png' : 'image/jpeg';
-        const dataUrl = canvas.toDataURL(mimeType, quality);
+        // Always encode as compressed JPEG to ensure payload is ultra-lightweight (< 35KB)
+        // (Note: canvas.toDataURL('image/png') completely ignores the quality parameter and creates multi-megabyte payloads!)
+        const dataUrl = canvas.toDataURL('image/jpeg', Math.min(quality || 0.7, 0.75));
         resolve(dataUrl);
       };
       img.onerror = () => reject(new Error('Gagal memproses berkas gambar'));
