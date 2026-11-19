@@ -46,6 +46,16 @@ export const DataProvider = ({ children }) => {
         }
         return parsed;
       }
+      // Auto-migrate profile if old 3-item stub is cached
+      if (key === 'profile' && parsed) {
+        if (!parsed.ethicsPreamble || !parsed.codeOfEthics || parsed.codeOfEthics.length <= 3) {
+          parsed.ethicsTitle = fallback.ethicsTitle;
+          parsed.ethicsPreamble = fallback.ethicsPreamble;
+          parsed.codeOfEthics = fallback.codeOfEthics;
+          parsed.ethicsRatification = fallback.ethicsRatification;
+        }
+        return parsed;
+      }
       // Auto-migrate members to strictly 3 types: Anggota Tetap, Anggota Luar Biasa, Anggota Muda
       if (key === 'members' && Array.isArray(parsed)) {
         return parsed.map((m) => {
@@ -191,7 +201,15 @@ export const DataProvider = ({ children }) => {
               };
             });
           }
-          if (d.profile) setProfile(d.profile);
+          if (d.profile) {
+            if (!d.profile.ethicsPreamble || !d.profile.codeOfEthics || d.profile.codeOfEthics.length <= 3) {
+              d.profile.ethicsTitle = initialProfile.ethicsTitle;
+              d.profile.ethicsPreamble = initialProfile.ethicsPreamble;
+              d.profile.codeOfEthics = initialProfile.codeOfEthics;
+              d.profile.ethicsRatification = initialProfile.ethicsRatification;
+            }
+            setProfile(d.profile);
+          }
           if (d.divisions) setDivisions(d.divisions);
           if (d.periods) setPeriods(d.periods);
           if (d.members) setMembers(d.members);

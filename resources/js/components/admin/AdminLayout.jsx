@@ -89,7 +89,7 @@ export const AdminLayout = () => {
     { id: 'prestasi', label: 'Rekor Prestasi', icon: Trophy },
     { id: 'kontak', label: 'Kontak & Sekretariat', icon: MapPin },
     { id: 'pendaftaran-anggota', label: 'Pendaftaran (GForm & CP)', icon: UserPlus, badge: settings.registrationIsOpen !== false ? 'Aktif' : 'Tutup' },
-    { id: 'cms-seo', label: 'Editor Tampilan & SEO', icon: Settings },
+    { id: 'cms-seo', label: 'Pengaturan SEO & Backup Data', icon: Settings },
     { id: 'pengaturan-sandi', label: 'Pengaturan Sandi Admin', icon: KeyRound, badge: 'Keamanan' },
     { id: 'audit', label: 'Audit Log & Keamanan', icon: Lock }
   ];

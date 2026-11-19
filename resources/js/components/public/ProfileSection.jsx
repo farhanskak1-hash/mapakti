@@ -85,31 +85,68 @@ export const ProfileSection = () => {
       </section>
 
       {/* 3. KODE ETIK PECINTA ALAM INDONESIA */}
-      <section className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-[#0b1424] to-slate-950 border border-slate-800 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#102A56] text-[#F5C400] flex items-center justify-center">
-              <Heart className="w-5 h-5" />
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1322] via-[#0f172a] to-[#070d18] border-2 border-[#F5C400]/40 p-6 sm:p-10 shadow-2xl space-y-6">
+        <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#F5C400]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-[#102A56]/40 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Header */}
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#F5C400]/30 pb-5">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-[#102A56] text-[#F5C400] flex items-center justify-center border border-[#F5C400]/40 shadow-lg flex-shrink-0">
+              <Heart className="w-6 h-6 text-[#F5C400]" />
             </div>
             <div>
-              <h3 className="text-lg sm:text-xl font-black text-white">Kode Etik Pecinta Alam Indonesia</h3>
-              <p className="text-xs text-slate-400">Ikrar luhur yang dijunjung tinggi setiap insan rimbawan MAPAKTI.</p>
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#F5C400]/15 text-[#F5C400] border border-[#F5C400]/40 text-[10px] font-bold uppercase tracking-widest mb-1">
+                <Sparkles className="w-3 h-3" />
+                <span>Ikrar Agung Penggiat Alam Bebas</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">
+                {profile.ethicsTitle || 'KODE ETIK PECINTA ALAM'}
+              </h2>
             </div>
           </div>
-          <span className="text-xs px-3 py-1 rounded-full bg-[#F5C400]/20 text-[#F5C400] border border-[#F5C400]/40 font-bold self-start sm:self-auto">
-            Glagah Arum 1974
-          </span>
+
+          <div className="flex flex-col items-start sm:items-end">
+            <span className="px-3.5 py-1.5 rounded-full bg-[#102A56] text-[#F5C400] border border-[#F5C400]/40 text-xs font-black tracking-wider uppercase shadow-md">
+              Gladian IV Ujung Pandang 1974
+            </span>
+            <span className="text-[11px] text-slate-400 mt-1 font-mono">Disahkan 28 Januari 1974</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {profile.codeOfEthics.map((ke, idx) => (
-            <div key={idx} className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs sm:text-sm text-slate-200 leading-relaxed flex flex-col justify-between">
-              <p className="italic">"{ke}"</p>
-              <div className="mt-4 pt-3 border-t border-slate-800 text-[10px] text-[#F5C400] font-bold uppercase tracking-wider">
-                Butir Ke-{idx + 1}
+        {/* Mukadimah / Hakekat Pembukaan */}
+        <div className="relative z-10 p-5 sm:p-6 rounded-2xl bg-[#080e1a]/90 border border-slate-800 text-xs sm:text-sm text-slate-300 leading-relaxed font-serif italic shadow-inner whitespace-pre-line text-justify sm:text-left">
+          {profile.ethicsPreamble || `Pecinta Alam Indonesia sadar bahwa alam beserta isinya adalah ciptaan Tuhan Yang Maha Esa.\nPecinta Alam Indonesia sebagai bagian dari masyarakat Indonesia sadar akan tanggungjawab terhadap Tuhan, Bangsa, dan Tanah Air.\nPecinta Alam Indonesia sadar bahwa segenap Pecinta Alam adalah saudara, sebagai mahluk yang mencintai alam sebagai anugerah Tuhan Yang Maha Esa.\nSesuai dengan hakekat diatas kami dengan kesadaran menyatakan sebagai berikut:`}
+        </div>
+
+        {/* 7 Butir Ikrar (Sesuai Gambar Dokumen Gladian IV 1974) */}
+        <div className="relative z-10 space-y-2.5">
+          {(profile.codeOfEthics || []).map((ke, idx) => (
+            <div
+              key={idx}
+              className="p-4 rounded-2xl bg-slate-900/80 hover:bg-[#102A56]/40 border border-slate-800/80 hover:border-[#F5C400]/40 transition-all flex items-start gap-3.5 group shadow-sm"
+            >
+              <div className="w-7 h-7 rounded-lg bg-[#102A56] text-[#F5C400] group-hover:bg-[#F5C400] group-hover:text-[#102A56] border border-[#F5C400]/50 font-black text-xs flex items-center justify-center flex-shrink-0 transition-colors shadow-md mt-0.5">
+                {idx + 1}
               </div>
+              <p className="text-xs sm:text-sm text-slate-200 font-semibold leading-relaxed pt-0.5">
+                {ke}
+              </p>
             </div>
           ))}
+        </div>
+
+        {/* Pengesahan Historis (Footer Sesuai Gambar) */}
+        <div className="relative z-10 pt-4 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 text-xs text-slate-400">
+          <div className="italic text-slate-400 max-w-md text-[11px] sm:text-xs">
+            "Kode Etik ini menjadi nafas perjuangan, batasan moral, dan ikrar sejati seluruh insan pecinta alam MAPAKTI Universitas Pancasakti Tegal."
+          </div>
+          <div className="bg-slate-950/90 border border-[#F5C400]/40 p-3.5 sm:p-4 rounded-2xl text-left sm:text-right font-mono text-[11px] sm:text-xs text-slate-300 shadow-md w-full sm:w-auto">
+            <div className="text-[#F5C400] font-bold uppercase tracking-wider mb-1 text-[10px]">Dokumen Otentik Pengesahan:</div>
+            <div className="whitespace-pre-line leading-relaxed font-semibold">
+              {profile.ethicsRatification || `Disahkan dalam\nForum Gladian IV di Ujung Pandang,\nTanggal 28 Januari 1974\nPukul 01.00 WITA`}
+            </div>
+          </div>
         </div>
       </section>
 

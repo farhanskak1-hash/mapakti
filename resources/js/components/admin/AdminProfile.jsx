@@ -12,8 +12,10 @@ import {
   CheckCircle2,
   Sparkles,
   Info,
-  Compass
+  Compass,
+  RotateCcw
 } from 'lucide-react';
+import { initialProfile } from '../../data/initialData';
 
 export const AdminProfile = () => {
   const { profile, setProfile, addAuditLog, addToast } = useData();
@@ -24,7 +26,13 @@ export const AdminProfile = () => {
     history: profile?.history || '',
     vision: profile?.vision || '',
     missions: profile?.missions ? [...profile.missions] : [],
-    codeOfEthics: profile?.codeOfEthics ? [...profile.codeOfEthics] : [],
+    ethicsTitle: profile?.ethicsTitle || initialProfile.ethicsTitle,
+    ethicsPreamble: profile?.ethicsPreamble || initialProfile.ethicsPreamble,
+    codeOfEthics:
+      profile?.codeOfEthics && profile.codeOfEthics.length > 3
+        ? [...profile.codeOfEthics]
+        : [...initialProfile.codeOfEthics],
+    ethicsRatification: profile?.ethicsRatification || initialProfile.ethicsRatification,
     logoUrl: profile?.logoUrl || '/images/logo-mapakti.png',
     symbolMeaning: profile?.symbolMeaning ? [...profile.symbolMeaning] : []
   });
@@ -69,6 +77,23 @@ export const AdminProfile = () => {
       ...prev,
       codeOfEthics: prev.codeOfEthics.filter((_, i) => i !== index)
     }));
+  };
+
+  const handleResetOfficialEthics = () => {
+    if (window.confirm('Kembalikan seluruh teks Kode Etik ke versi resmi Gladian IV Ujung Pandang 1974?')) {
+      setFormData((prev) => ({
+        ...prev,
+        ethicsTitle: initialProfile.ethicsTitle,
+        ethicsPreamble: initialProfile.ethicsPreamble,
+        codeOfEthics: [...initialProfile.codeOfEthics],
+        ethicsRatification: initialProfile.ethicsRatification
+      }));
+      addToast({
+        type: 'info',
+        title: 'Kode Etik Direset',
+        message: 'Teks dikembalikan ke naskah resmi Gladian IV Ujung Pandang 1974.'
+      });
+    }
   };
 
   // Handlers for Symbol Meanings
@@ -329,44 +354,111 @@ export const AdminProfile = () => {
 
         {/* TAB 4: KODE ETIK PECINTA ALAM */}
         {activeTab === 'kode-etik' && (
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2 text-[#F5C400] text-xs font-bold uppercase tracking-wider">
-                <Heart className="w-4 h-4" /> Butir-Butir Kode Etik Pecinta Alam Indonesia ({formData.codeOfEthics.length})
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <div className="flex items-center gap-2 text-[#F5C400] text-xs font-bold uppercase tracking-wider">
+                  <Heart className="w-4 h-4" /> Naskah Dokumen Kode Etik Pecinta Alam Indonesia
+                </div>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Naskah bersejarah ikrar insan rimbawan Indonesia (Forum Gladian IV Ujung Pandang 1974).
+                </p>
               </div>
-              <button
-                type="button"
-                onClick={handleAddEthic}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-[#102A56] text-[#F5C400] font-bold text-xs flex items-center gap-1.5 border border-slate-700 transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Tambah Butir Kode Etik</span>
-              </button>
+
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handleResetOfficialEthics}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold text-xs flex items-center gap-1.5 border border-slate-700 transition-colors"
+                  title="Kembalikan naskah ke teks otentik 1974"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-[#F5C400]" />
+                  <span>Reset Teks Asli 1974</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddEthic}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-[#102A56] text-[#F5C400] font-bold text-xs flex items-center gap-1.5 border border-slate-700 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Butir</span>
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {formData.codeOfEthics.map((ke, idx) => (
-                <div key={idx} className="flex items-start gap-2 bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800">
-                  <span className="w-7 h-7 rounded-lg bg-[#102A56] text-[#F5C400] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5 border border-[#F5C400]/40">
-                    {idx + 1}
-                  </span>
-                  <textarea
-                    rows={2}
-                    value={ke}
-                    onChange={(e) => handleUpdateEthic(idx, e.target.value)}
-                    placeholder={`Butir kode etik ke-${idx + 1}...`}
-                    className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#F5C400]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveEthic(idx)}
-                    className="p-2 text-slate-500 hover:text-rose-400 rounded-xl hover:bg-slate-800 transition-colors mt-0.5"
-                    title="Hapus Butir"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+            {/* 1. Judul Dokumen */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-300">
+                Judul Dokumen Kode Etik
+              </label>
+              <input
+                type="text"
+                value={formData.ethicsTitle || 'KODE ETIK PECINTA ALAM'}
+                onChange={(e) => setFormData({ ...formData, ethicsTitle: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-[#F5C400]"
+                placeholder="KODE ETIK PECINTA ALAM"
+              />
+            </div>
+
+            {/* 2. Mukadimah / Hakekat Pembukaan */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-300">
+                Mukadimah / Hakekat Pembukaan (Preamble)
+              </label>
+              <textarea
+                rows={4}
+                value={formData.ethicsPreamble || ''}
+                onChange={(e) => setFormData({ ...formData, ethicsPreamble: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white leading-relaxed focus:outline-none focus:border-[#F5C400]"
+                placeholder="Pecinta Alam Indonesia sadar bahwa..."
+              />
+              <p className="text-[10px] text-slate-500">Teks pembuka sebelum butir-butir pernyataan.</p>
+            </div>
+
+            {/* 3. Butir-Butir Pernyataan */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-300">
+                Butir-Butir Pernyataan ({formData.codeOfEthics.length} Butir)
+              </label>
+              <div className="space-y-3">
+                {formData.codeOfEthics.map((ke, idx) => (
+                  <div key={idx} className="flex items-start gap-2.5 bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800">
+                    <span className="w-7 h-7 rounded-lg bg-[#102A56] text-[#F5C400] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5 border border-[#F5C400]/40">
+                      {idx + 1}
+                    </span>
+                    <textarea
+                      rows={2}
+                      value={ke}
+                      onChange={(e) => handleUpdateEthic(idx, e.target.value)}
+                      placeholder={`Butir kode etik ke-${idx + 1}...`}
+                      className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#F5C400]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveEthic(idx)}
+                      className="p-2 text-slate-500 hover:text-rose-400 rounded-xl hover:bg-slate-800 transition-colors mt-0.5"
+                      title="Hapus Butir"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 4. Dokumen Pengesahan (Footer Ratification) */}
+            <div className="space-y-1.5 pt-2 border-t border-slate-800">
+              <label className="block text-xs font-bold text-slate-300">
+                Keterangan Dokumen Pengesahan Resmi (Footer)
+              </label>
+              <textarea
+                rows={3}
+                value={formData.ethicsRatification || ''}
+                onChange={(e) => setFormData({ ...formData, ethicsRatification: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono leading-relaxed focus:outline-none focus:border-[#F5C400]"
+                placeholder="Disahkan dalam Forum Gladian IV di Ujung Pandang..."
+              />
+              <p className="text-[10px] text-slate-500">Keterangan tempat dan tanggal pengesahan di sudut dokumen.</p>
             </div>
           </div>
         )}

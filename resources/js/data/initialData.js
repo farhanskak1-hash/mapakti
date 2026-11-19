@@ -179,11 +179,23 @@ Melalui perjalanan empat dekade, MAPAKTI telah menjelajahi puncak-puncak gunung 
     'Mempererat persaudaraan antar pencinta alam di tingkat universitas, regional, maupun nasional.'
   ],
 
+  ethicsTitle: 'KODE ETIK PECINTA ALAM',
+  ethicsPreamble: `Pecinta Alam Indonesia sadar bahwa alam beserta isinya adalah ciptaan Tuhan Yang Maha Esa.
+Pecinta Alam Indonesia sebagai bagian dari masyarakat Indonesia sadar akan tanggungjawab terhadap Tuhan, Bangsa, dan Tanah Air.
+Pecinta Alam Indonesia sadar bahwa segenap Pecinta Alam adalah saudara, sebagai mahluk yang mencintai alam sebagai anugerah Tuhan Yang Maha Esa.
+Sesuai dengan hakekat diatas kami dengan kesadaran menyatakan sebagai berikut:`,
+
   codeOfEthics: [
-    'Pencinta Alam Indonesia sadar bahwa alam beserta isinya adalah ciptaan Tuhan Yang Maha Esa.',
-    'Pencinta Alam Indonesia sebagai bagian dari masyarakat Indonesia sadar akan tanggung jawabnya kepada Tuhan, Bangsa, dan Tanah Air.',
-    'Pencinta Alam Indonesia sadar bahwa pecinta alam adalah sebagian dari upaya membina manusia Indonesia seutuhnya.'
+    'Mengabdi kepada Tuhan Yang Maha Esa.',
+    'Memelihara alam beserta isinya, serta menggunakan sumber alam sesuai batas kebutuhan.',
+    'Mengabdi kepada Bangsa dan Tanah Air.',
+    'Menghormati tata kehidupan yang berlaku pada masyarakat sekitarnya, serta menghargai manusia sesuai martabatnya.',
+    'Berusaha mempererat tali persaudaraan sesama Pecinta Alam, sesuai dengan asas dan tujuan Pecinta Alam.',
+    'Berusaha saling membantu dan saling menghargai dalam pelaksanaan pengabdian terhadap Tuhan, Bangsa dan Tanah Air.',
+    'Selesai.'
   ],
+
+  ethicsRatification: `Disahkan dalam\nForum Gladian IV di Ujung Pandang,\nTanggal 28 Januari 1974\nPukul 01.00 WITA`,
 
   symbolMeaning: [
     { 
