@@ -21,6 +21,79 @@ import {
 const DataContext = createContext(null);
 
 export const DataProvider = ({ children }) => {
+  // Storage Helper yang kebal terhadap QuotaExceededError & membersihkan storage penuh otomatis
+  const safeSetStorage = (key, data) => {
+    if (typeof window === 'undefined') return;
+
+    const storageKey = key.startsWith('mapakti_') ? key : `mapakti_${key}`;
+
+    let serialized = '';
+    try {
+      serialized = typeof data === 'string' ? data : JSON.stringify(data);
+    } catch (err) {
+      console.warn(`[MAPAKTI Storage] Serialisasi gagal untuk ${storageKey}:`, err);
+      return;
+    }
+
+    try {
+      localStorage.setItem(storageKey, serialized);
+    } catch (err) {
+      console.warn(`[MAPAKTI Storage] QuotaExceededError pada ${storageKey}. Menjalankan pemulihan cache...`);
+
+      try {
+        // Langkah 1: Hapus data cache log, notifikasi, dan alumni yang besar
+        localStorage.removeItem('mapakti_audit_logs');
+        localStorage.removeItem('mapakti_notifications');
+        localStorage.removeItem('mapakti_alumni');
+
+        // Coba simpan kembali
+        localStorage.setItem(storageKey, serialized);
+        return;
+      } catch (retryErr) {
+        try {
+          // Langkah 2: Jika masih penuh, buat salinan data ringan (lightweight) untuk offline cache
+          // dengan mengosongkan gambar Base64 besar (> 3KB) khusus di localStorage.
+          // CATATAN PENTING: State React dan database cloud tetap memegang gambar & data asli 100% utuh!
+          if (Array.isArray(data)) {
+            const sanitized = data.map((item) => {
+              if (!item || typeof item !== 'object') return item;
+              const copy = { ...item };
+              ['photoUrl', 'imageUrl', 'avatarUrl', 'photo', 'image', 'bannerUrl'].forEach((field) => {
+                if (
+                  typeof copy[field] === 'string' &&
+                  copy[field].startsWith('data:image/') &&
+                  copy[field].length > 3000
+                ) {
+                  copy[field] = '';
+                }
+              });
+              return copy;
+            });
+            localStorage.setItem(storageKey, JSON.stringify(sanitized));
+            return;
+          } else if (data && typeof data === 'object') {
+            const copy = { ...data };
+            Object.keys(copy).forEach((field) => {
+              if (
+                typeof copy[field] === 'string' &&
+                copy[field].startsWith('data:image/') &&
+                copy[field].length > 3000
+              ) {
+                copy[field] = '';
+              }
+            });
+            localStorage.setItem(storageKey, JSON.stringify(copy));
+            return;
+          }
+        } catch (sanitizeErr) {
+          // Langkah 3: Jangan pernah melempar exception QuotaExceededError ke window / React!
+          // Aplikasi tetap berfungsi 100% menggunakan memori browser dan Database Cloud.
+          console.warn(`[MAPAKTI Storage] Lewati penyimpanan offline untuk ${storageKey} karena kapasitas browser penuh.`);
+        }
+      }
+    }
+  };
+
   // Helper to load from localStorage with fallback
   const loadStored = (key, fallback) => {
     try {
@@ -63,7 +136,11 @@ export const DataProvider = ({ children }) => {
           if (status.includes('Muda') || status.includes('AM')) status = 'Anggota Muda';
           else if (status.includes('Luar') || status.includes('ALB')) status = 'Anggota Luar Biasa';
           else status = 'Anggota Tetap';
-          return { ...m, membershipStatus: status };
+          return {
+            ...m,
+            membershipStatus: status,
+            photoUrl: m.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'
+          };
         });
       }
       return parsed;
@@ -241,23 +318,41 @@ export const DataProvider = ({ children }) => {
     return () => { active = false; };
   }, []);
 
+  // Pembersihan proaktif localStorage saat startup agar tidak melebihi batas kuota browser
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    try {
+      let totalUsage = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k) totalUsage += (localStorage.getItem(k) || '').length;
+      }
+      if (totalUsage > 2500000) {
+        console.warn(`[MAPAKTI Storage] Cache localStorage cukup besar (${(totalUsage / 1024 / 1024).toFixed(2)} MB). Mengosongkan cache non-kritis...`);
+        localStorage.removeItem('mapakti_audit_logs');
+        localStorage.removeItem('mapakti_notifications');
+        localStorage.removeItem('mapakti_alumni');
+      }
+    } catch (e) {}
+  }, []);
+
   // Auto-sync state to localStorage and Database (hanya aktif setelah hidrasi selesai, mencegah overwrite saat ganti browser)
-  useEffect(() => { localStorage.setItem('mapakti_settings', JSON.stringify(settings)); if (isHydratedRef.current) syncToApi('settings', settings); }, [settings]);
-  useEffect(() => { localStorage.setItem('mapakti_profile', JSON.stringify(profile)); if (isHydratedRef.current) syncToApi('profile', profile); }, [profile]);
-  useEffect(() => { localStorage.setItem('mapakti_divisions', JSON.stringify(divisions)); if (isHydratedRef.current) syncToApi('divisions', divisions); }, [divisions]);
-  useEffect(() => { localStorage.setItem('mapakti_periods', JSON.stringify(periods)); if (isHydratedRef.current) syncToApi('periods', periods); }, [periods]);
-  useEffect(() => { localStorage.setItem('mapakti_members', JSON.stringify(members)); if (isHydratedRef.current) syncToApi('members', members); }, [members]);
-  useEffect(() => { localStorage.setItem('mapakti_programs', JSON.stringify(programs)); if (isHydratedRef.current) syncToApi('programs', programs); }, [programs]);
-  useEffect(() => { localStorage.setItem('mapakti_activities', JSON.stringify(activities)); if (isHydratedRef.current) syncToApi('activities', activities); }, [activities]);
-  useEffect(() => { localStorage.setItem('mapakti_act_regs', JSON.stringify(activityRegistrations)); if (isHydratedRef.current) syncToApi('act_regs', activityRegistrations); }, [activityRegistrations]);
-  useEffect(() => { localStorage.setItem('mapakti_mem_regs', JSON.stringify(memberRegistrations)); if (isHydratedRef.current) syncToApi('mem_regs', memberRegistrations); }, [memberRegistrations]);
-  useEffect(() => { localStorage.setItem('mapakti_news', JSON.stringify(news)); if (isHydratedRef.current) syncToApi('news', news); }, [news]);
-  useEffect(() => { localStorage.setItem('mapakti_gallery', JSON.stringify(gallery)); if (isHydratedRef.current) syncToApi('gallery', gallery); }, [gallery]);
-  useEffect(() => { localStorage.setItem('mapakti_diklatsar', JSON.stringify(diklatsarEvents)); if (isHydratedRef.current) syncToApi('diklatsar', diklatsarEvents); }, [diklatsarEvents]);
-  useEffect(() => { localStorage.setItem('mapakti_achievements', JSON.stringify(achievements)); if (isHydratedRef.current) syncToApi('achievements', achievements); }, [achievements]);
-  useEffect(() => { localStorage.setItem('mapakti_alumni', JSON.stringify(alumni)); if (isHydratedRef.current) syncToApi('alumni', alumni); }, [alumni]);
-  useEffect(() => { localStorage.setItem('mapakti_audit_logs', JSON.stringify(auditLogs)); if (isHydratedRef.current) syncToApi('audit_logs', auditLogs); }, [auditLogs]);
-  useEffect(() => { localStorage.setItem('mapakti_notifications', JSON.stringify(notifications)); if (isHydratedRef.current) syncToApi('notifications', notifications); }, [notifications]);
+  useEffect(() => { safeSetStorage('settings', settings); if (isHydratedRef.current) syncToApi('settings', settings); }, [settings]);
+  useEffect(() => { safeSetStorage('profile', profile); if (isHydratedRef.current) syncToApi('profile', profile); }, [profile]);
+  useEffect(() => { safeSetStorage('divisions', divisions); if (isHydratedRef.current) syncToApi('divisions', divisions); }, [divisions]);
+  useEffect(() => { safeSetStorage('periods', periods); if (isHydratedRef.current) syncToApi('periods', periods); }, [periods]);
+  useEffect(() => { safeSetStorage('members', members); if (isHydratedRef.current) syncToApi('members', members); }, [members]);
+  useEffect(() => { safeSetStorage('programs', programs); if (isHydratedRef.current) syncToApi('programs', programs); }, [programs]);
+  useEffect(() => { safeSetStorage('activities', activities); if (isHydratedRef.current) syncToApi('activities', activities); }, [activities]);
+  useEffect(() => { safeSetStorage('act_regs', activityRegistrations); if (isHydratedRef.current) syncToApi('act_regs', activityRegistrations); }, [activityRegistrations]);
+  useEffect(() => { safeSetStorage('mem_regs', memberRegistrations); if (isHydratedRef.current) syncToApi('mem_regs', memberRegistrations); }, [memberRegistrations]);
+  useEffect(() => { safeSetStorage('news', news); if (isHydratedRef.current) syncToApi('news', news); }, [news]);
+  useEffect(() => { safeSetStorage('gallery', gallery); if (isHydratedRef.current) syncToApi('gallery', gallery); }, [gallery]);
+  useEffect(() => { safeSetStorage('diklatsar', diklatsarEvents); if (isHydratedRef.current) syncToApi('diklatsar', diklatsarEvents); }, [diklatsarEvents]);
+  useEffect(() => { safeSetStorage('achievements', achievements); if (isHydratedRef.current) syncToApi('achievements', achievements); }, [achievements]);
+  useEffect(() => { safeSetStorage('alumni', alumni); if (isHydratedRef.current) syncToApi('alumni', alumni); }, [alumni]);
+  useEffect(() => { safeSetStorage('audit_logs', auditLogs); if (isHydratedRef.current) syncToApi('audit_logs', auditLogs); }, [auditLogs]);
+  useEffect(() => { safeSetStorage('notifications', notifications); if (isHydratedRef.current) syncToApi('notifications', notifications); }, [notifications]);
 
   // Toast Notification System
   const addToast = ({ type = 'info', title, message }) => {
@@ -282,7 +377,7 @@ export const DataProvider = ({ children }) => {
       module,
       details
     };
-    setAuditLogs((prev) => [newLog, ...prev]);
+    setAuditLogs((prev) => [newLog, ...prev].slice(0, 50));
   };
 
   // Admin Authentication handlers (FR-20)
@@ -308,7 +403,7 @@ export const DataProvider = ({ children }) => {
 
     if (isMatch) {
       setIsAdminAuthenticated(true);
-      localStorage.setItem('mapakti_admin_auth', 'true');
+      safeSetStorage('admin_auth', 'true');
       setIsAdminMode(true);
       setShowLoginModal(false);
       addAuditLog('LOGIN', 'Keamanan', `Administrator (${cleanEmail}) berhasil login ke Control Panel`);
@@ -383,10 +478,8 @@ export const DataProvider = ({ children }) => {
     setSettings(updatedSettings);
 
     // Simpan seketika ke LocalStorage untuk memastikan sesi browser langsung terupdate
-    try {
-      localStorage.setItem('mapakti_settings', JSON.stringify(updatedSettings));
-      localStorage.setItem('mapakti_admin_account', JSON.stringify(updatedAccount));
-    } catch (e) {}
+    safeSetStorage('settings', updatedSettings);
+    safeSetStorage('admin_account', updatedAccount);
 
     // Sinkronkan ke database server backend
     syncToApi('settings', updatedSettings);
@@ -437,7 +530,7 @@ export const DataProvider = ({ children }) => {
       createdAt: 'Baru saja',
       isRead: false
     };
-    setNotifications((prev) => [newNotif, ...prev]);
+    setNotifications((prev) => [newNotif, ...prev].slice(0, 40));
 
     addAuditLog('REGISTER_MEMBER', 'Pendaftaran Calon Anggota', `Pendaftar baru: ${data.fullName} (NIM: ${data.nim})`);
 
@@ -493,7 +586,7 @@ export const DataProvider = ({ children }) => {
       createdAt: 'Baru saja',
       isRead: false
     };
-    setNotifications((prev) => [newNotif, ...prev]);
+    setNotifications((prev) => [newNotif, ...prev].slice(0, 40));
 
     addAuditLog('REGISTER_ACTIVITY', 'Kegiatan & Ekspedisi', `Peserta baru: ${data.participantName} pada ${targetActivity.name}`);
 

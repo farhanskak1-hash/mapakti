@@ -1366,6 +1366,9 @@ export const AdminMembers = () => {
                   label="Foto Profil Anggota"
                   hint="Klik tombol untuk memilih berkas foto dari komputer / smartphone"
                   aspectRatio="aspect-square"
+                  maxWidth={480}
+                  maxHeight={480}
+                  quality={0.7}
                 />
               </div>
 

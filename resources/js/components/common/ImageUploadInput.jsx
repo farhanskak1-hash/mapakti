@@ -15,7 +15,7 @@ import {
  * while preventing database / payload overflow.
  * Directly produces a DataURL (Base64) stored inside the database JSON.
  */
-export const compressImageFile = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.82) => {
+export const compressImageFile = (file, maxWidth = 900, maxHeight = 900, quality = 0.72) => {
   return new Promise((resolve, reject) => {
     if (!file) return reject(new Error('Tidak ada berkas yang dipilih'));
     if (!file.type.startsWith('image/')) {
@@ -80,7 +80,10 @@ export const ImageUploadInput = ({
   label = 'Foto / Gambar',
   hint = 'Mendukung upload langsung ke database (JPG, PNG, WebP) atau link gambar dari internet',
   aspectRatio = 'aspect-video', // e.g. aspect-square, aspect-video, aspect-[4/5]
-  required = false
+  required = false,
+  maxWidth = 850,
+  maxHeight = 850,
+  quality = 0.72
 }) => {
   const isBase64 = value && value.startsWith('data:image/');
   const isHttpUrl = value && (value.startsWith('http://') || value.startsWith('https://'));
@@ -101,7 +104,7 @@ export const ImageUploadInput = ({
     setIsProcessing(true);
     setErrorMessage('');
     try {
-      const dataUrl = await compressImageFile(file);
+      const dataUrl = await compressImageFile(file, maxWidth, maxHeight, quality);
       if (onChange) onChange(dataUrl);
     } catch (err) {
       setErrorMessage(err.message || 'Terjadi kesalahan saat mengunggah');
