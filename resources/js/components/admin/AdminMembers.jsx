@@ -1366,11 +1366,11 @@ export const AdminMembers = () => {
                   value={formData.photoUrl}
                   onChange={(url) => setFormData({ ...formData, photoUrl: url })}
                   label="Foto Profil Anggota"
-                  hint="Pilih berkas foto profil anggota (otomatis dikompresi ringan & tajam)"
+                  hint="Bebas ukuran berkas: Mendukung foto resolusi tinggi / kamera HP di atas 5MB hingga 50MB (otomatis dikompresi jernih dan hemat kuota database)"
                   aspectRatio="aspect-square"
-                  maxWidth={320}
-                  maxHeight={320}
-                  quality={0.7}
+                  maxWidth={600}
+                  maxHeight={600}
+                  quality={0.8}
                 />
               </div>
 

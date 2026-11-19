@@ -7,39 +7,67 @@ import {
   CheckCircle2,
   RefreshCw,
   Database,
-  Globe
+  Globe,
+  Sparkles
 } from 'lucide-react';
 
 /**
- * Resizes and compresses an image client-side to ensure sharp quality
+ * Resizes and compresses an image client-side to ensure sharp HD quality
  * while preventing database / payload overflow.
- * Directly produces a DataURL (Base64) stored inside the database JSON.
+ * Uses URL.createObjectURL for memory efficiency, supporting large files (5MB - 50MB+).
+ * Directly produces an ultra-lightweight DataURL (Base64 JPEG) stored inside the database JSON.
  */
-export const compressImageFile = (file, maxWidth = 900, maxHeight = 900, quality = 0.72) => {
+export const compressImageFile = (file, maxWidth = 800, maxHeight = 800, quality = 0.78) => {
   return new Promise((resolve, reject) => {
     if (!file) return reject(new Error('Tidak ada berkas yang dipilih'));
-    if (!file.type.startsWith('image/')) {
-      return reject(new Error('Berkas yang dipilih bukan gambar (JPG, PNG, WebP, SVG)'));
+
+    const isImageMime = file.type && file.type.startsWith('image/');
+    const isImageExt = /\.(jpe?g|png|webp|svg|bmp|gif|avif|heic|heif)$/i.test(file.name || '');
+    if (!isImageMime && !isImageExt) {
+      return reject(new Error('Berkas yang dipilih bukan format gambar yang didukung (JPG, PNG, WebP, SVG, BMP)'));
     }
 
-    // For SVG: keep as vector DataURL
+    // Untuk SVG: baca sebagai teks / DataURL langsung
     if (file.type === 'image/svg+xml') {
       const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
+      reader.onload = (e) =>
+        resolve({
+          dataUrl: e.target.result,
+          originalBytes: file.size,
+          compressedBytes: e.target.result.length
+        });
       reader.onerror = () => reject(new Error('Gagal membaca berkas SVG'));
       reader.readAsDataURL(file);
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
+    // Gunakan URL.createObjectURL alih-alih FileReader untuk menghemat memori drastis
+    // (Bisa memproses foto kamera HP 5MB, 10MB, 20MB, hingga 50MB tanpa membebani RAM browser)
+    let blobUrl = null;
+    try {
+      blobUrl = URL.createObjectURL(file);
+    } catch (err) {
+      // Fallback jika createObjectURL tidak didukung
+    }
 
+    const img = new Image();
+
+    const cleanup = () => {
+      if (blobUrl) {
+        try {
+          URL.revokeObjectURL(blobUrl);
+        } catch (e) {}
+      }
+    };
+
+    img.onload = () => {
+      try {
+        let width = img.naturalWidth || img.width;
+        let height = img.naturalHeight || img.height;
+
+        // Hitung skala dimensi proporsional agar aspek rasio terjaga
         if (width > maxWidth || height > maxHeight) {
-          if (width > height) {
+          if (width / maxWidth > height / maxHeight) {
             height = Math.round((height * maxWidth) / width);
             width = maxWidth;
           } else {
@@ -48,26 +76,96 @@ export const compressImageFile = (file, maxWidth = 900, maxHeight = 900, quality
           }
         }
 
+        width = Math.max(1, width);
+        height = Math.max(1, height);
+
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false });
 
-        // Always draw onto a clean white background so transparent areas in PNG/WebP look natural
+        // Latar belakang putih bersih
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
+
+        // Smoothing kualitas tinggi
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Always encode as compressed JPEG to ensure payload is ultra-lightweight (< 35KB)
-        // (Note: canvas.toDataURL('image/png') completely ignores the quality parameter and creates multi-megabyte payloads!)
-        const dataUrl = canvas.toDataURL('image/jpeg', Math.min(quality || 0.7, 0.75));
-        resolve(dataUrl);
-      };
-      img.onerror = () => reject(new Error('Gagal memproses berkas gambar'));
-      img.src = e.target.result;
+        // Ekspor ke JPEG berkualitas tajam namun sangat hemat byte (< 50KB)
+        const dataUrl = canvas.toDataURL('image/jpeg', Math.min(quality || 0.78, 0.85));
+
+        cleanup();
+
+        resolve({
+          dataUrl,
+          originalBytes: file.size,
+          compressedBytes: Math.round(dataUrl.length * 0.75),
+          width,
+          height
+        });
+      } catch (procErr) {
+        cleanup();
+        reject(new Error('Gagal mengompresi gambar: ' + procErr.message));
+      }
     };
-    reader.onerror = () => reject(new Error('Gagal membaca berkas'));
-    reader.readAsDataURL(file);
+
+    img.onerror = () => {
+      cleanup();
+      // Fallback FileReader jika createObjectURL diblokir
+      const reader = new FileReader();
+      reader.onload = (re) => {
+        const fallbackImg = new Image();
+        fallbackImg.onload = () => {
+          try {
+            let width = fallbackImg.width;
+            let height = fallbackImg.height;
+            if (width > maxWidth || height > maxHeight) {
+              if (width > height) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              } else {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(fallbackImg, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+            resolve({
+              dataUrl,
+              originalBytes: file.size,
+              compressedBytes: Math.round(dataUrl.length * 0.75),
+              width,
+              height
+            });
+          } catch (e) {
+            reject(new Error('Gagal memproses gambar fallback'));
+          }
+        };
+        fallbackImg.onerror = () => reject(new Error('Format gambar tidak dapat dibaca oleh browser'));
+        fallbackImg.src = re.target.result;
+      };
+      reader.onerror = () => reject(new Error('Gagal membaca berkas gambar'));
+      reader.readAsDataURL(file);
+    };
+
+    if (blobUrl) {
+      img.src = blobUrl;
+    } else {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Gagal membaca berkas'));
+      reader.readAsDataURL(file);
+    }
   });
 };
 
@@ -75,18 +173,20 @@ export const ImageUploadInput = ({
   value = '',
   onChange,
   label = 'Foto / Gambar',
-  hint = 'Mendukung upload langsung ke database (JPG, PNG, WebP) atau link gambar dari internet',
+  hint = 'Mendukung upload langsung foto ukuran bebas > 5MB hingga 50MB (JPG, PNG, WebP) atau link gambar dari internet',
   aspectRatio = 'aspect-video', // e.g. aspect-square, aspect-video, aspect-[4/5]
   required = false,
-  maxWidth = 850,
-  maxHeight = 850,
-  quality = 0.72
+  maxWidth = 800,
+  maxHeight = 800,
+  quality = 0.78
 }) => {
   const isBase64 = value && value.startsWith('data:image/');
   const isHttpUrl = value && (value.startsWith('http://') || value.startsWith('https://'));
 
   const [activeTab, setActiveTab] = useState(isHttpUrl ? 'url' : 'upload'); // 'upload' | 'url'
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingNote, setProcessingNote] = useState('');
+  const [uploadStats, setUploadStats] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef(null);
@@ -100,13 +200,38 @@ export const ImageUploadInput = ({
   const processFile = async (file) => {
     setIsProcessing(true);
     setErrorMessage('');
+    const originalMb = (file.size / (1024 * 1024)).toFixed(1);
+    setProcessingNote(
+      file.size > 2 * 1024 * 1024
+        ? `Mengoptimasi foto kamera/resolusi tinggi (${originalMb} MB)...`
+        : 'Mengompresi foto...'
+    );
+
     try {
-      const dataUrl = await compressImageFile(file, maxWidth, maxHeight, quality);
-      if (onChange) onChange(dataUrl);
+      const result = await compressImageFile(file, maxWidth, maxHeight, quality);
+      const url = typeof result === 'string' ? result : result.dataUrl;
+
+      const origSizeStr =
+        file.size >= 1024 * 1024
+          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${Math.round(file.size / 1024)} KB`;
+
+      const compSizeStr = result.compressedBytes
+        ? `${Math.round(result.compressedBytes / 1024)} KB`
+        : `${Math.round((url.length * 0.75) / 1024)} KB`;
+
+      setUploadStats({
+        name: file.name,
+        original: origSizeStr,
+        compressed: compSizeStr
+      });
+
+      if (onChange) onChange(url);
     } catch (err) {
-      setErrorMessage(err.message || 'Terjadi kesalahan saat mengunggah');
+      setErrorMessage(err.message || 'Terjadi kesalahan saat mengunggah gambar');
     } finally {
       setIsProcessing(false);
+      setProcessingNote('');
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -122,6 +247,7 @@ export const ImageUploadInput = ({
 
   const handleClear = () => {
     if (onChange) onChange('');
+    setUploadStats(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -204,14 +330,19 @@ export const ImageUploadInput = ({
                 </button>
               </div>
 
-              <div className="p-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-                <div className="flex items-center gap-2">
+              <div className="p-2.5 bg-slate-900 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Gambar Siap Digunakan
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Foto Siap Digunakan
                   </span>
-                  {isBase64 && (
+                  {uploadStats && (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700/60 text-[10px] font-bold">
+                      {uploadStats.original} ➔ {uploadStats.compressed} (Super Tajam & Hemat)
+                    </span>
+                  )}
+                  {isBase64 && !uploadStats && (
                     <span className="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 text-[10px] font-bold flex items-center gap-1">
-                      <Database className="w-2.5 h-2.5" /> Simpan di Database
+                      <Database className="w-2.5 h-2.5" /> Database
                     </span>
                   )}
                   {isHttpUrl && (
@@ -251,11 +382,14 @@ export const ImageUploadInput = ({
                 </div>
                 <div>
                   <div className="text-xs font-bold text-white">
-                    {isProcessing ? 'Mengoptimasi Gambar untuk Database...' : 'Klik untuk Pilih Foto dari Laptop / HP'}
+                    {isProcessing ? processingNote || 'Mengoptimasi Gambar...' : 'Klik atau Tarik Foto ke Sini'}
                   </div>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    Gambar otomatis dikompres dan disimpan langsung ke database
+                    Mendukung foto ukuran besar & kamera HP (&gt; 5MB hingga 50MB, JPG, PNG, WebP)
                   </p>
+                  <div className="inline-flex items-center gap-1 text-[10px] text-[#F5C400] bg-[#102A56] px-2.5 py-0.5 rounded-full border border-[#F5C400]/30 mt-1">
+                    <Sparkles className="w-3 h-3 text-[#F5C400]" /> Bebas ukuran: otomatis dioptimasi HD & hemat kuota
+                  </div>
                 </div>
                 <button
                   type="button"
