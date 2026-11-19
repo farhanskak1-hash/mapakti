@@ -26,7 +26,7 @@ async function ensureTables(pool) {
         phone VARCHAR(50),
         email VARCHAR(255),
         achievements TEXT,
-        photo_url TEXT,
+        photo_url LONGTEXT,
         is_published TINYINT(1) DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -111,41 +111,52 @@ export default async function handler(req, res) {
         `;
         await pool.execute(query, [collKey, JSON.stringify(collData)]);
 
-        // Sync relational members table if members updated
+        // Safe optional background sync for relational members table (never fails main collection save)
         if (collKey === 'members' && Array.isArray(collData)) {
-          const memberQuery = `
-            INSERT INTO members (id, name, nia, generation, join_year, faculty, membership_status, specialization_division, phone, email, achievements, photo_url, is_published)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-              name = VALUES(name),
-              nia = VALUES(nia),
-              generation = VALUES(generation),
-              join_year = VALUES(join_year),
-              faculty = VALUES(faculty),
-              membership_status = VALUES(membership_status),
-              specialization_division = VALUES(specialization_division),
-              phone = VALUES(phone),
-              email = VALUES(email),
-              achievements = VALUES(achievements),
-              photo_url = VALUES(photo_url),
-              is_published = VALUES(is_published)
-          `;
-          for (const m of collData) {
-            await pool.execute(memberQuery, [
-              m.id,
-              m.name,
-              m.nia,
-              m.generation || '',
-              m.joinYear || 2024,
-              m.faculty || '',
-              m.membershipStatus || 'Anggota Tetap',
-              m.specializationDivision || 'Hutan Gunung',
-              m.phone || '',
-              m.email || '',
-              m.achievements || '',
-              m.photoUrl || '',
-              m.isPublished ? 1 : 0
-            ]);
+          try {
+            const memberQuery = `
+              INSERT INTO members (id, name, nia, generation, join_year, faculty, membership_status, specialization_division, phone, email, achievements, photo_url, is_published)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              ON DUPLICATE KEY UPDATE
+                name = VALUES(name),
+                nia = VALUES(nia),
+                generation = VALUES(generation),
+                join_year = VALUES(join_year),
+                faculty = VALUES(faculty),
+                membership_status = VALUES(membership_status),
+                specialization_division = VALUES(specialization_division),
+                phone = VALUES(phone),
+                email = VALUES(email),
+                achievements = VALUES(achievements),
+                photo_url = VALUES(photo_url),
+                is_published = VALUES(is_published)
+            `;
+            // Execute in batches or safe map
+            for (const m of collData) {
+              if (!m || !m.name) continue;
+              const safeId = String(m.id || `mem-${Math.random().toString(36).substr(2, 9)}`);
+              const parsedYear = parseInt(m.joinYear, 10);
+              const safeYear = Number.isInteger(parsedYear) ? parsedYear : 2024;
+              const safePhoto = typeof m.photoUrl === 'string' ? m.photoUrl : '';
+
+              await pool.execute(memberQuery, [
+                safeId,
+                String(m.name).slice(0, 255),
+                String(m.nia || '').slice(0, 100),
+                String(m.generation || '').slice(0, 100),
+                safeYear,
+                String(m.faculty || '').slice(0, 255),
+                String(m.membershipStatus || 'Anggota Tetap').slice(0, 100),
+                String(m.specializationDivision || 'Hutan Gunung').slice(0, 100),
+                String(m.phone || '').slice(0, 50),
+                String(m.email || '').slice(0, 255),
+                String(m.achievements || ''),
+                safePhoto,
+                m.isPublished ? 1 : 0
+              ]);
+            }
+          } catch (relErr) {
+            console.warn('[Sync Relational Warning] Non-critical members table sync error:', relErr.message);
           }
         }
       };

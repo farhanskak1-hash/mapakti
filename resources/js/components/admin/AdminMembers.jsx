@@ -30,6 +30,7 @@ export const AdminMembers = () => {
   const {
     members,
     setMembers,
+    updateMembers,
     toggleMemberPublish,
     addAuditLog,
     addToast
@@ -126,7 +127,7 @@ export const AdminMembers = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editingMember) {
-      setMembers((prev) =>
+      updateMembers((prev) =>
         prev.map((item) => (item.id === editingMember.id ? { ...item, ...formData } : item))
       );
       addAuditLog('UPDATE', 'Data Anggota', `Memperbarui data anggota ${formData.name} (${formData.nia})`);
@@ -136,7 +137,7 @@ export const AdminMembers = () => {
         id: `mem-${Date.now()}`,
         ...formData
       };
-      setMembers((prev) => [newM, ...prev]);
+      updateMembers((prev) => [newM, ...prev]);
       addAuditLog('CREATE', 'Data Anggota', `Menambahkan anggota baru ${formData.name} (${formData.nia})`);
       addToast({ type: 'success', title: 'Anggota Ditambahkan', message: `Anggota ${formData.name} berhasil didaftarkan sebagai ${formData.membershipStatus}.` });
     }
@@ -145,7 +146,7 @@ export const AdminMembers = () => {
 
   const handleDelete = (id, name) => {
     if (window.confirm(`Hapus data anggota ${name}?`)) {
-      setMembers((prev) => prev.filter((m) => m.id !== id));
+      updateMembers((prev) => prev.filter((m) => m.id !== id));
       setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
       addAuditLog('DELETE', 'Data Anggota', `Menghapus anggota ${name}`);
       addToast({ type: 'info', title: 'Anggota Dihapus', message: `Data anggota ${name} telah dihapus.` });
@@ -175,7 +176,7 @@ export const AdminMembers = () => {
         `PERINGATAN HAPUS MASSAL: Apakah Anda yakin ingin menghapus ${count} data anggota yang dicentang? Tindakan ini tidak dapat dibatalkan.`
       )
     ) {
-      setMembers((prev) => prev.filter((m) => !selectedIds.includes(m.id)));
+      updateMembers((prev) => prev.filter((m) => !selectedIds.includes(m.id)));
       addAuditLog('DELETE', 'Data Anggota', `Menghapus massal ${count} data anggota`);
       addToast({
         type: 'info',
@@ -194,7 +195,7 @@ export const AdminMembers = () => {
         `PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SELURUH ${count} data anggota? Seluruh baris data anggota akan dikosongkan.`
       )
     ) {
-      setMembers([]);
+      updateMembers([]);
       setSelectedIds([]);
       addAuditLog('DELETE', 'Data Anggota', `Mengosongkan seluruh data anggota (${count} orang)`);
       addToast({
@@ -211,7 +212,7 @@ export const AdminMembers = () => {
         'Apakah Anda ingin mereset dan mengembalikan data anggota ke sample data bawaan MAPAKTI?'
       )
     ) {
-      setMembers(initialMembers);
+      updateMembers(initialMembers);
       setSelectedIds([]);
       addAuditLog('UPDATE', 'Data Anggota', 'Mereset data anggota ke contoh awal bawaan');
       addToast({
@@ -534,7 +535,7 @@ export const AdminMembers = () => {
       ) {
         return;
       }
-      setMembers(parsedMembers);
+      updateMembers(parsedMembers);
     } else {
       // Append mode: avoid duplicate NIA if already exists
       const existingNias = new Set(members.map((m) => m.nia.toLowerCase().trim()));
@@ -554,7 +555,7 @@ export const AdminMembers = () => {
         }
       });
 
-      setMembers([...toAdd, ...updated]);
+      updateMembers([...toAdd, ...updated]);
     }
 
     addAuditLog('IMPORT', 'Data Anggota', `Berhasil mengimpor ${parsedMembers.length} anggota dari file ${importFile?.name || 'Excel'}`);

@@ -21,6 +21,10 @@ import {
 const DataContext = createContext(null);
 
 export const DataProvider = ({ children }) => {
+  // Tracking koleksi data yang telah dimodifikasi langsung oleh user dalam sesi ini
+  // (Mencegah tertimpa oleh respons loadFromDb yang lambat)
+  const userModifiedCollections = useRef(new Set());
+
   // Storage Helper yang kebal terhadap QuotaExceededError & membersihkan storage penuh otomatis
   const safeSetStorage = (key, data) => {
     if (typeof window === 'undefined') return;
@@ -38,57 +42,65 @@ export const DataProvider = ({ children }) => {
     try {
       localStorage.setItem(storageKey, serialized);
     } catch (err) {
-      console.warn(`[MAPAKTI Storage] QuotaExceededError pada ${storageKey}. Menjalankan pemulihan cache...`);
+      console.warn(`[MAPAKTI Storage] QuotaExceededError pada ${storageKey}. Menjalankan pembersihan cache prioritas...`);
 
       try {
-        // Langkah 1: Hapus data cache log, notifikasi, dan alumni yang besar
-        localStorage.removeItem('mapakti_audit_logs');
-        localStorage.removeItem('mapakti_notifications');
-        localStorage.removeItem('mapakti_alumni');
+        // Tahap 1: Hapus cache sekunder yang memakan ruang besar
+        const secondaryCaches = [
+          'mapakti_audit_logs',
+          'mapakti_notifications',
+          'mapakti_gallery',
+          'mapakti_news',
+          'mapakti_activities',
+          'mapakti_alumni'
+        ];
+        secondaryCaches.forEach((k) => {
+          if (k !== storageKey) {
+            try { localStorage.removeItem(k); } catch (e) {}
+          }
+        });
 
         // Coba simpan kembali
         localStorage.setItem(storageKey, serialized);
         return;
       } catch (retryErr) {
         try {
-          // Langkah 2: Jika masih penuh, buat salinan data ringan (lightweight) untuk offline cache
-          // dengan mengosongkan gambar Base64 besar (> 3KB) khusus di localStorage.
-          // CATATAN PENTING: State React dan database cloud tetap memegang gambar & data asli 100% utuh!
-          if (Array.isArray(data)) {
-            const sanitized = data.map((item) => {
-              if (!item || typeof item !== 'object') return item;
-              const copy = { ...item };
-              ['photoUrl', 'imageUrl', 'avatarUrl', 'photo', 'image', 'bannerUrl'].forEach((field) => {
-                if (
-                  typeof copy[field] === 'string' &&
-                  copy[field].startsWith('data:image/') &&
-                  copy[field].length > 3000
-                ) {
-                  copy[field] = '';
-                }
-              });
-              return copy;
-            });
-            localStorage.setItem(storageKey, JSON.stringify(sanitized));
-            return;
-          } else if (data && typeof data === 'object') {
-            const copy = { ...data };
-            Object.keys(copy).forEach((field) => {
-              if (
-                typeof copy[field] === 'string' &&
-                copy[field].startsWith('data:image/') &&
-                copy[field].length > 3000
-              ) {
-                copy[field] = '';
-              }
-            });
-            localStorage.setItem(storageKey, JSON.stringify(copy));
-            return;
+          // Tahap 2: Jika masih penuh, bersihkan SEMUA key mapakti kecuali auth & settings & target key
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (
+              k &&
+              k.startsWith('mapakti_') &&
+              k !== storageKey &&
+              k !== 'mapakti_admin_account' &&
+              k !== 'mapakti_admin_auth' &&
+              k !== 'mapakti_settings'
+            ) {
+              try { localStorage.removeItem(k); } catch (e) {}
+            }
           }
-        } catch (sanitizeErr) {
-          // Langkah 3: Jangan pernah melempar exception QuotaExceededError ke window / React!
-          // Aplikasi tetap berfungsi 100% menggunakan memori browser dan Database Cloud.
-          console.warn(`[MAPAKTI Storage] Lewati penyimpanan offline untuk ${storageKey} karena kapasitas browser penuh.`);
+
+          localStorage.setItem(storageKey, serialized);
+          return;
+        } catch (retry2Err) {
+          try {
+            // Tahap 3: Jika data masif karena gambar base64 panjang, pangkas payload gambar di offline cache
+            if (Array.isArray(data)) {
+              const sanitized = data.map((item) => {
+                if (!item || typeof item !== 'object') return item;
+                const copy = { ...item };
+                ['photoUrl', 'imageUrl', 'avatarUrl', 'photo', 'image', 'bannerUrl'].forEach((field) => {
+                  if (typeof copy[field] === 'string' && copy[field].length > 500) {
+                    copy[field] = '';
+                  }
+                });
+                return copy;
+              });
+              localStorage.setItem(storageKey, JSON.stringify(sanitized));
+            }
+          } catch (finalErr) {
+            console.warn(`[MAPAKTI Storage] Lewati penyimpanan offline untuk ${storageKey} karena storage browser penuh.`);
+          }
         }
       }
     }
@@ -289,7 +301,7 @@ export const DataProvider = ({ children }) => {
           }
           if (d.divisions) setDivisions(d.divisions);
           if (d.periods) setPeriods(d.periods);
-          if (d.members) setMembers(d.members);
+          if (d.members && !userModifiedCollections.current.has('members')) setMembers(d.members);
           if (d.programs) setPrograms(d.programs);
           if (d.activities) setActivities(d.activities);
           if (d.act_regs) setActivityRegistrations(d.act_regs);
@@ -599,6 +611,17 @@ export const DataProvider = ({ children }) => {
     return true;
   };
 
+  // Update and Persist Members with Immediate Storage & Cloud Sync
+  const updateMembers = (updater) => {
+    userModifiedCollections.current.add('members');
+    setMembers((prev) => {
+      const nextMembers = typeof updater === 'function' ? updater(prev) : updater;
+      safeSetStorage('members', nextMembers);
+      syncToApi('members', nextMembers);
+      return nextMembers;
+    });
+  };
+
   // Privacy toggles (FR-04, FR-13)
   const toggleMemberPublish = (memberId) => {
     setMembers((prev) =>
@@ -833,7 +856,7 @@ export const DataProvider = ({ children }) => {
         profile, setProfile,
         divisions, setDivisions,
         periods, setPeriods,
-        members, setMembers,
+        members, setMembers, updateMembers,
         programs, setPrograms,
         activities, setActivities,
         activityRegistrations, setActivityRegistrations,
