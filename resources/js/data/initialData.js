@@ -164,6 +164,14 @@ export const initialSiteSettings = {
 };
 
 export const initialProfile = {
+  headerBadge: 'Profil Resmi Organisasi',
+  title: 'Sejarah, Visi, Misi & Falsafah MAPAKTI',
+  subtitle: 'Mengenal jati diri Mahasiswa Pencinta Alam Universitas Pancasakti Tegal sebagai wadah pembinaan generasi muda rimbawan sejak 1984.',
+  historyBadge: 'Kilas Sejarah',
+  historyHeadline: 'Empat Dekade Mengabdi untuk Alam & Almamater',
+  historyShortDesc: 'Didirikan di Kampus Universitas Pancasakti Tegal dengan semangat Tri Dharma Perguruan Tinggi dan Kode Etik Pecinta Alam Indonesia.',
+  establishedYear: '1996',
+  campusBase: 'UPS Tegal',
   logoUrl: '/images/logo-mapakti.png',
   history: `MAPAKTI (Mahasiswa Pencinta Alam Universitas Pancasakti Tegal) didirikan atas inisiatif sekelompok mahasiswa yang memiliki kecintaan mendalam terhadap kelestarian alam dan hasrat bereksplorasi di alam bebas. Sejak diresmikan di lingkungan kampus Universitas Pancasakti Tegal, MAPAKTI telah menjadi kawah candradimuka penempaan karakter kepemimpinan, kepedulian ekologis, dan ketangguhan fisik serta mental bagi ribuan kader.
 

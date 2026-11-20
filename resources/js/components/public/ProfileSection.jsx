@@ -5,19 +5,29 @@ import { BookOpen, Target, ShieldCheck, Heart, Flag, Sparkles, CheckCircle2 } fr
 export const ProfileSection = () => {
   const { profile, settings } = useData();
 
+  const headerBadge = profile?.headerBadge || 'Profil Resmi Organisasi';
+  const title = profile?.title || 'Sejarah, Visi, Misi & Falsafah MAPAKTI';
+  const subtitle = profile?.subtitle || 'Mengenal jati diri Mahasiswa Pencinta Alam Universitas Pancasakti Tegal sebagai wadah pembinaan generasi muda rimbawan sejak 1984.';
+
+  const historyBadge = profile?.historyBadge || 'Kilas Sejarah';
+  const historyHeadline = profile?.historyHeadline || 'Empat Dekade Mengabdi untuk Alam & Almamater';
+  const historyShortDesc = profile?.historyShortDesc || 'Didirikan di Kampus Universitas Pancasakti Tegal dengan semangat Tri Dharma Perguruan Tinggi dan Kode Etik Pecinta Alam Indonesia.';
+  const establishedYear = profile?.establishedYear || settings?.establishedYear || '1996';
+  const campusBase = profile?.campusBase || 'UPS Tegal';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 space-y-16">
       {/* Header Banner */}
       <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#102A56] via-[#163872] to-[#0b1424] border border-[#F5C400]/40 p-8 sm:p-12 shadow-2xl">
         <div className="max-w-3xl space-y-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F5C400] text-[#102A56] text-xs font-black uppercase tracking-wider">
-            <BookOpen className="w-3.5 h-3.5" /> Profil Resmi Organisasi
+            <BookOpen className="w-3.5 h-3.5" /> {headerBadge}
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-white leading-tight">
-            Sejarah, Visi, Misi & Falsafah MAPAKTI
+            {title}
           </h1>
           <p className="text-sm sm:text-base text-slate-200">
-            Mengenal jati diri Mahasiswa Pencinta Alam Universitas Pancasakti Tegal sebagai wadah pembinaan generasi muda rimbawan sejak 1984.
+            {subtitle}
           </p>
         </div>
       </div>
@@ -26,26 +36,30 @@ export const ProfileSection = () => {
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-4 space-y-4">
           <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3">
-            <span className="text-xs font-bold uppercase text-[#F5C400] tracking-wider block">Kilas Sejarah</span>
-            <h3 className="text-xl font-black text-white leading-snug">Empat Dekade Mengabdi untuk Alam & Almamater</h3>
+            <span className="text-xs font-bold uppercase text-[#F5C400] tracking-wider block">
+              {historyBadge}
+            </span>
+            <h3 className="text-xl font-black text-white leading-snug">
+              {historyHeadline}
+            </h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Didirikan di Kampus Universitas Pancasakti Tegal dengan semangat Tri Dharma Perguruan Tinggi dan Kode Etik Pecinta Alam Indonesia.
+              {historyShortDesc}
             </p>
             <div className="pt-2 border-t border-slate-800 text-xs text-slate-300 space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-slate-500">Tahun Pendirian</span>
-                <span className="font-bold text-[#F5C400]">{settings.establishedYear || '1984'}</span>
+                <span className="font-bold text-[#F5C400]">{establishedYear}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Basis Kampus</span>
-                <span className="font-bold text-white">UPS Tegal</span>
+                <span className="font-bold text-white">{campusBase}</span>
               </div>
             </div>
           </div>
         </div>
 
         <div className="lg:col-span-8 p-6 sm:p-8 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-4 text-sm sm:text-base text-slate-300 leading-relaxed whitespace-pre-line">
-          {profile.history}
+          {profile?.history}
         </div>
       </section>
 

@@ -177,7 +177,7 @@ export const DataProvider = ({ children }) => {
         }
         return parsed;
       }
-      // Auto-migrate profile if old 3-item stub is cached
+      // Auto-migrate profile if old 3-item stub is cached or missing header/history fields
       if (key === 'profile' && parsed) {
         if (!parsed.ethicsPreamble || !parsed.codeOfEthics || parsed.codeOfEthics.length <= 3) {
           parsed.ethicsTitle = fallback.ethicsTitle;
@@ -185,6 +185,14 @@ export const DataProvider = ({ children }) => {
           parsed.codeOfEthics = fallback.codeOfEthics;
           parsed.ethicsRatification = fallback.ethicsRatification;
         }
+        if (!parsed.headerBadge) parsed.headerBadge = fallback.headerBadge;
+        if (!parsed.title) parsed.title = fallback.title;
+        if (!parsed.subtitle) parsed.subtitle = fallback.subtitle;
+        if (!parsed.historyBadge) parsed.historyBadge = fallback.historyBadge;
+        if (!parsed.historyHeadline) parsed.historyHeadline = fallback.historyHeadline;
+        if (!parsed.historyShortDesc) parsed.historyShortDesc = fallback.historyShortDesc;
+        if (!parsed.establishedYear) parsed.establishedYear = fallback.establishedYear;
+        if (!parsed.campusBase) parsed.campusBase = fallback.campusBase;
         return parsed;
       }
       // Auto-migrate members to strictly 3 types: Anggota Tetap, Anggota Luar Biasa, Anggota Muda
@@ -367,6 +375,14 @@ export const DataProvider = ({ children }) => {
               d.profile.codeOfEthics = initialProfile.codeOfEthics;
               d.profile.ethicsRatification = initialProfile.ethicsRatification;
             }
+            if (!d.profile.headerBadge) d.profile.headerBadge = initialProfile.headerBadge;
+            if (!d.profile.title) d.profile.title = initialProfile.title;
+            if (!d.profile.subtitle) d.profile.subtitle = initialProfile.subtitle;
+            if (!d.profile.historyBadge) d.profile.historyBadge = initialProfile.historyBadge;
+            if (!d.profile.historyHeadline) d.profile.historyHeadline = initialProfile.historyHeadline;
+            if (!d.profile.historyShortDesc) d.profile.historyShortDesc = initialProfile.historyShortDesc;
+            if (!d.profile.establishedYear) d.profile.establishedYear = initialProfile.establishedYear;
+            if (!d.profile.campusBase) d.profile.campusBase = initialProfile.campusBase;
             setProfile(d.profile);
           }
           if (d.divisions) setDivisions(d.divisions);
