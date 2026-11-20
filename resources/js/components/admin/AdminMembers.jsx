@@ -43,10 +43,10 @@ export const AdminMembers = () => {
   const [filterStatus, setFilterStatus] = useState('Semua'); // 'Semua' | 'Anggota Tetap' | 'Anggota Luar Biasa' | 'Anggota Muda'
   const [filterGen, setFilterGen] = useState('Semua');
 
-  // Daftar seluruh angkatan unik terurut rapi secara Romawi (Angkatan I -> XXIV)
+  // Daftar seluruh angkatan unik terurut rapi secara Romawi dari yang paling baru (misal: XXIV -> XXIII -> XIX -> XVIII -> XVII -> I)
   const allGenerations = useMemo(() => {
     const list = Array.from(new Set(members.map((m) => m.generation?.trim()).filter(Boolean)));
-    return sortGenerations(list, 'asc');
+    return sortGenerations(list, 'desc');
   }, [members]);
 
   // Multi-select state for batch deletion

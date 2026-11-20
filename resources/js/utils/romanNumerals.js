@@ -119,10 +119,10 @@ export const extractGenerationNumber = (genStr) => {
  * Komparator untuk mengurutkan dua nama angkatan berdasarkan angka romawi/desimal
  * @param {string} a 
  * @param {string} b 
- * @param {'asc'|'desc'} order 'asc' untuk urutan I -> XXIV, 'desc' untuk XXIV -> I
+ * @param {'asc'|'desc'} order 'desc' untuk urutan terbaru (XXIV -> I), 'asc' untuk I -> XXIV
  * @returns {number}
  */
-export const compareGenerations = (a, b, order = 'asc') => {
+export const compareGenerations = (a, b, order = 'desc') => {
   const numA = extractGenerationNumber(a);
   const numB = extractGenerationNumber(b);
 
@@ -141,10 +141,10 @@ export const compareGenerations = (a, b, order = 'asc') => {
 /**
  * Mengurutkan array string nama angkatan
  * @param {string[]} list 
- * @param {'asc'|'desc'} order 
+ * @param {'asc'|'desc'} order Default 'desc' agar selalu mengutamakan angkatan paling baru
  * @returns {string[]}
  */
-export const sortGenerations = (list, order = 'asc') => {
+export const sortGenerations = (list, order = 'desc') => {
   if (!Array.isArray(list)) return [];
   return [...list].sort((a, b) => compareGenerations(a, b, order));
 };

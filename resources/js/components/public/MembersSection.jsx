@@ -22,21 +22,22 @@ export const MembersSection = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mode pengurutan angkatan: 'asc' (Angkatan I -> XXIV) atau 'desc' (Angkatan XXIV -> I)
-  // Default 'asc' agar angka Romawi berurutan dari Angkatan I, II, III ...
+  // Mode pengurutan angkatan: 'desc' (Angkatan terbaru ke terlama: XXIV -> I) atau 'asc' (I -> XXIV)
+  // Default 'desc' agar selalu mengutamakan dan menampilkan angkatan paling baru di urutan terdepan
   const [sortOrder, setSortOrder] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('mapakti_gen_sort_order') || 'asc';
+      const stored = localStorage.getItem('mapakti_gen_sort_order_v2');
+      if (stored === 'asc' || stored === 'desc') return stored;
     }
-    return 'asc';
+    return 'desc';
   });
 
   const toggleSortOrder = () => {
-    const nextOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    const nextOrder = sortOrder === 'desc' ? 'asc' : 'desc';
     setSortOrder(nextOrder);
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('mapakti_gen_sort_order', nextOrder);
+        localStorage.setItem('mapakti_gen_sort_order_v2', nextOrder);
       } catch (e) {}
     }
   };
@@ -149,22 +150,22 @@ export const MembersSection = () => {
           </div>
 
           <div className="flex items-center gap-2.5">
-            {/* Tombol Pengubah Urutan Angkatan (Romawi I -> Terkini atau Sebaliknya) */}
+            {/* Tombol Pengubah Urutan Angkatan (Romawi Terkini -> Terlama atau Sebaliknya) */}
             <button
               type="button"
               onClick={toggleSortOrder}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-[#F5C400]/60 text-xs font-medium text-slate-300 hover:text-white transition-all shadow-sm active:scale-95"
               title="Klik untuk mengubah urutan nomor angkatan"
             >
-              {sortOrder === 'asc' ? (
+              {sortOrder === 'desc' ? (
                 <>
-                  <ArrowUpNarrowWide className="w-3.5 h-3.5 text-[#F5C400]" />
-                  <span>Urutan: <strong className="text-[#F5C400] font-bold">Angkatan I → Terkini</strong></span>
+                  <ArrowDownWideNarrow className="w-3.5 h-3.5 text-[#F5C400]" />
+                  <span>Urutan: <strong className="text-[#F5C400] font-bold">Terbaru → Terlama</strong></span>
                 </>
               ) : (
                 <>
-                  <ArrowDownWideNarrow className="w-3.5 h-3.5 text-[#F5C400]" />
-                  <span>Urutan: <strong className="text-[#F5C400] font-bold">Terkini → Angkatan I</strong></span>
+                  <ArrowUpNarrowWide className="w-3.5 h-3.5 text-[#F5C400]" />
+                  <span>Urutan: <strong className="text-[#F5C400] font-bold">Terlama (Angkatan I) → Terbaru</strong></span>
                 </>
               )}
             </button>
