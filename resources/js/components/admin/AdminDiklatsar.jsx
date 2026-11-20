@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 import { ImageUploadInput } from '../common/ImageUploadInput';
+import { compareGenerations } from '../../utils/romanNumerals';
 import { Award, Plus, Edit2, Trash2, X, MapPin, Users, Calendar } from 'lucide-react';
 
 export const AdminDiklatsar = () => {
@@ -88,7 +89,9 @@ export const AdminDiklatsar = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {diklatsarEvents.map((d) => (
+        {[...diklatsarEvents]
+          .sort((a, b) => compareGenerations(a.batchNumber, b.batchNumber, 'desc'))
+          .map((d) => (
           <div
             key={d.id}
             className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden p-5 space-y-4 hover:border-[#F5C400]/40 transition-colors flex flex-col justify-between"

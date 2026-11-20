@@ -1,5 +1,6 @@
 import React from 'react';
 import { useData } from '../../context/DataContext';
+import { compareGenerations } from '../../utils/romanNumerals';
 import { Award, Camera, MapPin, Users, Calendar, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export const DiklatsarSection = () => {
@@ -39,7 +40,9 @@ export const DiklatsarSection = () => {
 
       {/* Diklatsar Batch Timeline Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {diklatsarEvents.map((diksar) => (
+        {[...diklatsarEvents]
+          .sort((a, b) => compareGenerations(a.batchNumber, b.batchNumber, 'desc'))
+          .map((diksar) => (
           <div
             key={diksar.id}
             onClick={() => setSelectedDiklatsar(diksar)}

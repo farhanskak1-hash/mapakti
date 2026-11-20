@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useData } from '../../context/DataContext';
 import { initialMembers } from '../../data/initialData';
 import { ImageUploadInput } from '../common/ImageUploadInput';
+import { sortGenerations } from '../../utils/romanNumerals';
 import * as XLSX from 'xlsx';
 import {
   Users,
@@ -40,6 +41,13 @@ export const AdminMembers = () => {
   const [search, setSearch] = useState('');
   const [filterDiv, setFilterDiv] = useState('Semua');
   const [filterStatus, setFilterStatus] = useState('Semua'); // 'Semua' | 'Anggota Tetap' | 'Anggota Luar Biasa' | 'Anggota Muda'
+  const [filterGen, setFilterGen] = useState('Semua');
+
+  // Daftar seluruh angkatan unik terurut rapi secara Romawi (Angkatan I -> XXIV)
+  const allGenerations = useMemo(() => {
+    const list = Array.from(new Set(members.map((m) => m.generation?.trim()).filter(Boolean)));
+    return sortGenerations(list, 'asc');
+  }, [members]);
 
   // Multi-select state for batch deletion
   const [selectedIds, setSelectedIds] = useState([]);
@@ -89,8 +97,9 @@ export const AdminMembers = () => {
 
     const matchDiv = filterDiv === 'Semua' || m.specializationDivision.includes(filterDiv);
     const matchStatus = filterStatus === 'Semua' || m.membershipStatus === filterStatus;
+    const matchGen = filterGen === 'Semua' || m.generation?.trim() === filterGen;
 
-    return matchSearch && matchDiv && matchStatus;
+    return matchSearch && matchDiv && matchStatus && matchGen;
   });
 
   // =================== SINGLE MEMBER HANDLERS ===================
@@ -740,7 +749,7 @@ export const AdminMembers = () => {
           </div>
         </div>
 
-        {/* Filter Badges: Divisi & Tipe */}
+        {/* Filter Badges: Divisi, Tipe, & Angkatan */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800 text-xs">
           {/* Division Filter */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
@@ -760,22 +769,39 @@ export const AdminMembers = () => {
             ))}
           </div>
 
-          {/* Status Filter */}
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            <span className="text-[10px] font-bold uppercase text-slate-500 mr-1">Tipe:</span>
-            {['Semua', 'Anggota Tetap', 'Anggota Luar Biasa', 'Anggota Muda'].map((st) => (
-              <button
-                key={st}
-                onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
-                  filterStatus === st
-                    ? 'bg-[#102A56] text-[#F5C400] border border-[#F5C400]/40'
-                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800 hover:bg-slate-800'
-                }`}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Status Filter */}
+            <div className="flex items-center gap-1.5 overflow-x-auto">
+              <span className="text-[10px] font-bold uppercase text-slate-500 mr-1">Tipe:</span>
+              {['Semua', 'Anggota Tetap', 'Anggota Luar Biasa', 'Anggota Muda'].map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setFilterStatus(st)}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
+                    filterStatus === st
+                      ? 'bg-[#102A56] text-[#F5C400] border border-[#F5C400]/40'
+                      : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800 hover:bg-slate-800'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+
+            {/* Angkatan Filter (Dropdown terurut angka Romawi) */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold uppercase text-slate-500">Angkatan:</span>
+              <select
+                value={filterGen}
+                onChange={(e) => setFilterGen(e.target.value)}
+                className="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-xl px-2.5 py-1 focus:outline-none focus:border-[#F5C400]"
               >
-                {st}
-              </button>
-            ))}
+                <option value="Semua">Semua ({allGenerations.length})</option>
+                {allGenerations.map((gen) => (
+                  <option key={gen} value={gen}>{gen}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -1264,11 +1290,17 @@ export const AdminMembers = () => {
                   <input
                     type="text"
                     required
+                    list="admin-members-generations-datalist"
                     value={formData.generation}
                     onChange={(e) => setFormData({ ...formData, generation: e.target.value })}
                     placeholder="Contoh: Angkatan XXII - Tapak Rimba"
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#F5C400]"
                   />
+                  <datalist id="admin-members-generations-datalist">
+                    {allGenerations.map((gen) => (
+                      <option key={gen} value={gen} />
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">Fakultas *</label>

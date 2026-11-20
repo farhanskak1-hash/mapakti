@@ -22,55 +22,69 @@ import {
 const IDB_NAME = 'mapakti_db';
 const IDB_STORE = 'collections';
 
-const idbGet = (key) =>
-  new Promise((resolve) => {
-    if (typeof window === 'undefined' || !window.indexedDB) return resolve(null);
-    try {
-      const req = indexedDB.open(IDB_NAME, 1);
-      req.onupgradeneeded = () => {
-        try { req.result.createObjectStore(IDB_STORE); } catch (e) {}
-      };
-      req.onsuccess = () => {
-        try {
-          const tx = req.result.transaction(IDB_STORE, 'readonly');
-          const store = tx.objectStore(IDB_STORE);
-          const getReq = store.get(key);
-          getReq.onsuccess = () => resolve(getReq.result);
-          getReq.onerror = () => resolve(null);
-        } catch (e) {
-          resolve(null);
-        }
-      };
-      req.onerror = () => resolve(null);
-    } catch (e) {
-      resolve(null);
-    }
-  });
+let idbPromise = null;
+function getDb() {
+  if (!idbPromise) {
+    idbPromise = new Promise((resolve) => {
+      if (typeof window === 'undefined' || !window.indexedDB) return resolve(null);
+      try {
+        const req = indexedDB.open(IDB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(IDB_STORE)) {
+            db.createObjectStore(IDB_STORE);
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+        req.onblocked = () => resolve(null);
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  }
+  return idbPromise;
+}
 
-const idbSet = (key, val) =>
-  new Promise((resolve) => {
-    if (typeof window === 'undefined' || !window.indexedDB) return resolve(false);
-    try {
-      const req = indexedDB.open(IDB_NAME, 1);
-      req.onupgradeneeded = () => {
-        try { req.result.createObjectStore(IDB_STORE); } catch (e) {}
-      };
-      req.onsuccess = () => {
-        try {
-          const tx = req.result.transaction(IDB_STORE, 'readwrite');
-          const store = tx.objectStore(IDB_STORE);
-          store.put(val, key);
-          tx.oncomplete = () => resolve(true);
-          tx.onerror = () => resolve(false);
-        } catch (e) {
-          resolve(false);
-        }
-      };
-      req.onerror = () => resolve(false);
-    } catch (e) {
-      resolve(false);
-    }
-  });
+const idbGet = async (key) => {
+  try {
+    const db = await getDb();
+    if (!db) return null;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(IDB_STORE, 'readonly');
+        const store = tx.objectStore(IDB_STORE);
+        const req = store.get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  } catch (e) {
+    return null;
+  }
+};
+
+const idbSet = async (key, val) => {
+  try {
+    const db = await getDb();
+    if (!db) return false;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        const store = tx.objectStore(IDB_STORE);
+        store.put(val, key);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      } catch (e) {
+        resolve(false);
+      }
+    });
+  } catch (e) {
+    return false;
+  }
+};
 
 const DataContext = createContext(null);
 
@@ -360,10 +374,12 @@ export const DataProvider = ({ children }) => {
           if (d.members && Array.isArray(d.members) && !userModifiedCollections.current.has('members')) {
             const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_members_user_edited') === 'true';
             setMembers((currentLocal) => {
-              if (hasLocalEdits && Array.isArray(currentLocal)) {
-                // Jangan timpa jika user sudah memiliki data anggota yang telah diedit/ditambahkan secara lokal
-                if (currentLocal.length >= d.members.length) {
-                  // Pastikan database server juga ikut terupdate dengan data lokal ini
+              const localHasCustomPhotos = Array.isArray(currentLocal) && currentLocal.some(
+                (m) => m?.photoUrl && (m.photoUrl.startsWith('data:image/') || m.photoUrl.length > 150)
+              );
+              if (localHasCustomPhotos || hasLocalEdits) {
+                if (Array.isArray(currentLocal) && currentLocal.length >= d.members.length) {
+                  // Sinkronkan ke database server agar tidak ada gap data
                   syncToApi('members', currentLocal);
                   return currentLocal;
                 }
@@ -418,21 +434,20 @@ export const DataProvider = ({ children }) => {
 
   // Restorasi asinkron dari IndexedDB jika data atau foto di localStorage sempat terpotong
   useEffect(() => {
+    let active = true;
     async function restoreFromIdb() {
       try {
         const idbMembers = await idbGet('mapakti_members');
-        if (Array.isArray(idbMembers) && idbMembers.length > 0) {
+        if (active && Array.isArray(idbMembers) && idbMembers.length > 0) {
+          const idbHasPhotos = idbMembers.some((m) => m?.photoUrl && (m.photoUrl.startsWith('data:image/') || m.photoUrl.length > 150));
+          const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_members_user_edited') === 'true';
+
           setMembers((prev) => {
-            if (!Array.isArray(prev) || prev.length < idbMembers.length) {
-              return idbMembers;
-            }
-            // Periksa apakah IndexedDB memegang foto yang lebih lengkap dibanding localStorage
-            const hasBetterPhotos = idbMembers.some((im, i) => {
-              const currentP = prev[i]?.photoUrl || '';
-              const idbP = im?.photoUrl || '';
-              return idbP.length > currentP.length;
-            });
-            if (hasBetterPhotos) {
+            if (!Array.isArray(prev) || prev.length < idbMembers.length || idbHasPhotos || hasLocalEdits) {
+              userModifiedCollections.current.add('members');
+              try {
+                localStorage.setItem('mapakti_members', JSON.stringify(idbMembers));
+              } catch (e) {}
               return idbMembers;
             }
             return prev;
@@ -441,25 +456,26 @@ export const DataProvider = ({ children }) => {
       } catch (e) {}
     }
     restoreFromIdb();
+    return () => { active = false; };
   }, []);
 
-  // Auto-sync state to localStorage and Database (hanya aktif setelah hidrasi selesai, mencegah overwrite saat ganti browser)
-  useEffect(() => { safeSetStorage('settings', settings); if (isHydratedRef.current) syncToApi('settings', settings); }, [settings]);
-  useEffect(() => { safeSetStorage('profile', profile); if (isHydratedRef.current) syncToApi('profile', profile); }, [profile]);
-  useEffect(() => { safeSetStorage('divisions', divisions); if (isHydratedRef.current) syncToApi('divisions', divisions); }, [divisions]);
-  useEffect(() => { safeSetStorage('periods', periods); if (isHydratedRef.current) syncToApi('periods', periods); }, [periods]);
-  useEffect(() => { safeSetStorage('members', members); if (isHydratedRef.current) syncToApi('members', members); }, [members]);
-  useEffect(() => { safeSetStorage('programs', programs); if (isHydratedRef.current) syncToApi('programs', programs); }, [programs]);
-  useEffect(() => { safeSetStorage('activities', activities); if (isHydratedRef.current) syncToApi('activities', activities); }, [activities]);
-  useEffect(() => { safeSetStorage('act_regs', activityRegistrations); if (isHydratedRef.current) syncToApi('act_regs', activityRegistrations); }, [activityRegistrations]);
-  useEffect(() => { safeSetStorage('mem_regs', memberRegistrations); if (isHydratedRef.current) syncToApi('mem_regs', memberRegistrations); }, [memberRegistrations]);
-  useEffect(() => { safeSetStorage('news', news); if (isHydratedRef.current) syncToApi('news', news); }, [news]);
-  useEffect(() => { safeSetStorage('gallery', gallery); if (isHydratedRef.current) syncToApi('gallery', gallery); }, [gallery]);
-  useEffect(() => { safeSetStorage('diklatsar', diklatsarEvents); if (isHydratedRef.current) syncToApi('diklatsar', diklatsarEvents); }, [diklatsarEvents]);
-  useEffect(() => { safeSetStorage('achievements', achievements); if (isHydratedRef.current) syncToApi('achievements', achievements); }, [achievements]);
-  useEffect(() => { safeSetStorage('alumni', alumni); if (isHydratedRef.current) syncToApi('alumni', alumni); }, [alumni]);
-  useEffect(() => { safeSetStorage('audit_logs', auditLogs); if (isHydratedRef.current) syncToApi('audit_logs', auditLogs); }, [auditLogs]);
-  useEffect(() => { safeSetStorage('notifications', notifications); if (isHydratedRef.current) syncToApi('notifications', notifications); }, [notifications]);
+  // Auto-sync state to localStorage and Database (hanya aktif setelah hidrasi selesai, mencegah overwrite saat refresh atau mount awal)
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('settings', settings); syncToApi('settings', settings); } }, [settings]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('profile', profile); syncToApi('profile', profile); } }, [profile]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('divisions', divisions); syncToApi('divisions', divisions); } }, [divisions]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('periods', periods); syncToApi('periods', periods); } }, [periods]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('members', members); syncToApi('members', members); } }, [members]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('programs', programs); syncToApi('programs', programs); } }, [programs]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('activities', activities); syncToApi('activities', activities); } }, [activities]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('act_regs', activityRegistrations); syncToApi('act_regs', activityRegistrations); } }, [activityRegistrations]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('mem_regs', memberRegistrations); syncToApi('mem_regs', memberRegistrations); } }, [memberRegistrations]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('news', news); syncToApi('news', news); } }, [news]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('gallery', gallery); syncToApi('gallery', gallery); } }, [gallery]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('diklatsar', diklatsarEvents); syncToApi('diklatsar', diklatsarEvents); } }, [diklatsarEvents]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('achievements', achievements); syncToApi('achievements', achievements); } }, [achievements]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('alumni', alumni); syncToApi('alumni', alumni); } }, [alumni]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('audit_logs', auditLogs); syncToApi('audit_logs', auditLogs); } }, [auditLogs]);
+  useEffect(() => { if (isHydratedRef.current) { safeSetStorage('notifications', notifications); syncToApi('notifications', notifications); } }, [notifications]);
 
   // Toast Notification System
   const addToast = ({ type = 'info', title, message }) => {

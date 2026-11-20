@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useData } from '../../context/DataContext';
+import { sortGenerations } from '../../utils/romanNumerals';
 import {
   Users,
   Search,
@@ -11,7 +12,9 @@ import {
   ArrowRight,
   Compass,
   Calendar,
-  Layers
+  Layers,
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide
 } from 'lucide-react';
 
 export const MembersSection = () => {
@@ -19,13 +22,31 @@ export const MembersSection = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Extract all unique generations from published members, sorted newest first
+  // Mode pengurutan angkatan: 'asc' (Angkatan I -> XXIV) atau 'desc' (Angkatan XXIV -> I)
+  // Default 'asc' agar angka Romawi berurutan dari Angkatan I, II, III ...
+  const [sortOrder, setSortOrder] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('mapakti_gen_sort_order') || 'asc';
+    }
+    return 'asc';
+  });
+
+  const toggleSortOrder = () => {
+    const nextOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortOrder(nextOrder);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('mapakti_gen_sort_order', nextOrder);
+      } catch (e) {}
+    }
+  };
+
+  // Ekstrak seluruh angkatan unik dari anggota yang dipublikasikan, diurutkan akurat berdasarkan angka Romawi
   const availableGenerations = useMemo(() => {
     const published = members.filter((m) => m.isPublished && m.generation && m.generation.trim());
     const gens = Array.from(new Set(published.map((m) => m.generation.trim())));
-    // Sort descending so newer angkatan comes first (e.g. XXIV, XXIII, XXII)
-    return gens.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
-  }, [members]);
+    return sortGenerations(gens, sortOrder);
+  }, [members, sortOrder]);
 
   // Direct selection per Angkatan (no "Semua" option)
   const [selectedGeneration, setSelectedGeneration] = useState('');
@@ -121,14 +142,37 @@ export const MembersSection = () => {
 
       {/* Primary Navigation: Langsung Per Angkatan (Tanpa Pilihan 'Semua') */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#F5C400]">
             <Layers className="w-4 h-4" />
             <span>Pilih Angkatan:</span>
           </div>
-          <span className="text-xs text-slate-400">
-            Total {availableGenerations.length} Angkatan Terdaftar
-          </span>
+
+          <div className="flex items-center gap-2.5">
+            {/* Tombol Pengubah Urutan Angkatan (Romawi I -> Terkini atau Sebaliknya) */}
+            <button
+              type="button"
+              onClick={toggleSortOrder}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-[#F5C400]/60 text-xs font-medium text-slate-300 hover:text-white transition-all shadow-sm active:scale-95"
+              title="Klik untuk mengubah urutan nomor angkatan"
+            >
+              {sortOrder === 'asc' ? (
+                <>
+                  <ArrowUpNarrowWide className="w-3.5 h-3.5 text-[#F5C400]" />
+                  <span>Urutan: <strong className="text-[#F5C400] font-bold">Angkatan I → Terkini</strong></span>
+                </>
+              ) : (
+                <>
+                  <ArrowDownWideNarrow className="w-3.5 h-3.5 text-[#F5C400]" />
+                  <span>Urutan: <strong className="text-[#F5C400] font-bold">Terkini → Angkatan I</strong></span>
+                </>
+              )}
+            </button>
+
+            <span className="text-xs text-slate-400">
+              Total {availableGenerations.length} Angkatan Terdaftar
+            </span>
+          </div>
         </div>
 
         {availableGenerations.length === 0 ? (
