@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { DataProvider, useData } from './context/DataContext';
 import { Header } from './components/common/Header';
 import { Footer } from './components/common/Footer';
@@ -6,7 +6,11 @@ import { AdminLoginModal } from './components/common/AdminLoginModal';
 import { GlobalSearchModal } from './components/common/GlobalSearchModal';
 import { DetailModals } from './components/common/DetailModals';
 import { ToastContainer } from './components/common/ToastContainer';
-import { AdminLayout } from './components/admin/AdminLayout';
+
+// Code-splitting: Lazy load modul Admin besar agar beban awal halaman publik sangat ringan
+const AdminLayout = lazy(() =>
+  import('./components/admin/AdminLayout').then((m) => ({ default: m.AdminLayout }))
+);
 
 // 14 Public Sections per PRD
 import { HomeSection } from './components/public/HomeSection';
@@ -29,7 +33,18 @@ const MainApp = () => {
   if (isAdminMode && isAdminAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-        <AdminLayout />
+        <Suspense
+          fallback={
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-3">
+              <div className="w-8 h-8 border-2 border-[#F5C400] border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs text-slate-400 font-semibold tracking-wider uppercase">
+                Memuat Panel Administrator...
+              </span>
+            </div>
+          }
+        >
+          <AdminLayout />
+        </Suspense>
         <ToastContainer />
       </div>
     );

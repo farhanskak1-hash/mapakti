@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export const AdminPeriods = () => {
-  const { periods, setPeriods, members, addAuditLog, addToast } = useData();
+  const { periods, setPeriods, updatePeriods, members, addAuditLog, addToast } = useData();
   const [selectedPeriodId, setSelectedPeriodId] = useState(periods[0]?.id || '');
 
   // Modal states
@@ -102,7 +102,7 @@ export const AdminPeriods = () => {
 
     if (editingPeriod) {
       // If set to Aktif, demote any previous Aktif period
-      setPeriods((prev) =>
+      updatePeriods((prev) =>
         prev.map((p) => {
           if (p.id === editingPeriod.id) {
             return {
@@ -127,7 +127,7 @@ export const AdminPeriods = () => {
         members: []
       };
 
-      setPeriods((prev) => {
+      updatePeriods((prev) => {
         let updated = [...prev];
         if (periodForm.status === 'Aktif') {
           updated = updated.map((p) => (p.status === 'Aktif' ? { ...p, status: 'Demisioner' } : p));
@@ -149,7 +149,7 @@ export const AdminPeriods = () => {
       return;
     }
     if (window.confirm(`Yakin ingin menghapus ${period.name}? Seluruh struktur pengurus di periode ini akan terhapus.`)) {
-      setPeriods((prev) => prev.filter((p) => p.id !== period.id));
+      updatePeriods((prev) => prev.filter((p) => p.id !== period.id));
       const remaining = periods.filter((p) => p.id !== period.id);
       if (remaining.length > 0) setSelectedPeriodId(remaining[0].id);
 
@@ -159,7 +159,7 @@ export const AdminPeriods = () => {
   };
 
   const handleSetPrimaryActive = (periodId) => {
-    setPeriods((prev) =>
+    updatePeriods((prev) =>
       prev.map((p) => ({
         ...p,
         status: p.id === periodId ? 'Aktif' : p.status === 'Aktif' ? 'Demisioner' : p.status
@@ -233,7 +233,7 @@ export const AdminPeriods = () => {
 
     if (editingMember) {
       // Update existing officer
-      setPeriods((prev) =>
+      updatePeriods((prev) =>
         prev.map((p) => {
           if (p.id === activePeriod.id) {
             return {
@@ -255,7 +255,7 @@ export const AdminPeriods = () => {
         ...officerForm
       };
 
-      setPeriods((prev) =>
+      updatePeriods((prev) =>
         prev.map((p) =>
           p.id === activePeriod.id
             ? { ...p, members: [...(p.members || []), newOfficerObj] }
@@ -272,7 +272,7 @@ export const AdminPeriods = () => {
 
   const handleDeleteOfficer = (officerId, officerName) => {
     if (window.confirm(`Hapus ${officerName} dari struktur pengurus ${activePeriod.name}?`)) {
-      setPeriods((prev) =>
+      updatePeriods((prev) =>
         prev.map((p) =>
           p.id === activePeriod.id
             ? { ...p, members: (p.members || []).filter((m) => m.id !== officerId) }

@@ -4,7 +4,7 @@ import { ImageUploadInput } from '../common/ImageUploadInput';
 import { Image as ImageIcon, Plus, Trash2, Edit2, X, ZoomIn } from 'lucide-react';
 
 export const AdminGallery = () => {
-  const { gallery, setGallery, addAuditLog, addToast } = useData();
+  const { gallery, setGallery, updateGallery, addAuditLog, addToast } = useData();
   const [showModal, setShowModal] = useState(false);
   const [newPhoto, setNewPhoto] = useState({
     title: '',
@@ -18,7 +18,7 @@ export const AdminGallery = () => {
   const handleAdd = (e) => {
     e.preventDefault();
     const item = { id: `gal-${Date.now()}`, ...newPhoto };
-    setGallery((prev) => [item, ...prev]);
+    updateGallery((prev) => [item, ...prev]);
     addAuditLog('CREATE', 'Galeri Foto', `Menambahkan foto baru: "${newPhoto.title}"`);
     addToast({ type: 'success', title: 'Foto Ditambahkan', message: `Foto "${newPhoto.title}" berhasil diunggah.` });
     setShowModal(false);
@@ -26,7 +26,7 @@ export const AdminGallery = () => {
 
   const handleDelete = (id, title) => {
     if (window.confirm(`Hapus foto: "${title}"?`)) {
-      setGallery((prev) => prev.filter((g) => g.id !== id));
+      updateGallery((prev) => prev.filter((g) => g.id !== id));
       addAuditLog('DELETE', 'Galeri Foto', `Menghapus foto: "${title}"`);
       addToast({ type: 'info', title: 'Foto Dihapus', message: `Foto "${title}" telah dihapus.` });
     }

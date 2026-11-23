@@ -22,7 +22,7 @@ import {
 import { initialProfile } from '../../data/initialData';
 
 export const AdminProfile = () => {
-  const { profile, setProfile, settings, setSettings, addAuditLog, addToast } = useData();
+  const { profile, setProfile, updateProfile, settings, setSettings, updateSettings, addAuditLog, addToast } = useData();
 
   // Tab aktif: default langsung ke 'sejarah' agar admin dapat langsung mengedit Kilas Sejarah & Banner Profil
   const [activeTab, setActiveTab] = useState('sejarah');
@@ -179,11 +179,11 @@ export const AdminProfile = () => {
       ...formData
     };
 
-    setProfile(updatedProfile);
+    updateProfile(updatedProfile);
 
     // Sinkronkan tahun pendirian ke settings jika diedit agar konsisten di seluruh web
     if (formData.establishedYear && formData.establishedYear !== settings?.establishedYear) {
-      setSettings((prev) => ({
+      updateSettings((prev) => ({
         ...prev,
         establishedYear: formData.establishedYear
       }));

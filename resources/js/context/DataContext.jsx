@@ -96,14 +96,22 @@ export const DataProvider = ({ children }) => {
   // Kumpulan key yang SANGAT KRITIS dan TIDAK BOLEH PERNAH DIHAPUS oleh proses pembersihan cache!
   const PROTECTED_KEYS = new Set([
     'mapakti_members',
+    'mapakti_diklatsar',
+    'mapakti_periods',
+    'mapakti_gallery',
+    'mapakti_profile',
     'mapakti_settings',
     'mapakti_admin_account',
     'mapakti_admin_auth',
-    'mapakti_profile',
     'mapakti_divisions',
-    'mapakti_periods',
     'mapakti_members_user_edited',
-    'mapakti_members_updated_at'
+    'mapakti_members_updated_at',
+    'mapakti_diklatsar_user_edited',
+    'mapakti_diklatsar_updated_at',
+    'mapakti_periods_user_edited',
+    'mapakti_periods_updated_at',
+    'mapakti_gallery_user_edited',
+    'mapakti_gallery_updated_at'
   ]);
 
   // Storage Helper yang kebal terhadap QuotaExceededError & menjaga seluruh data dan foto tetap abadi
@@ -386,7 +394,23 @@ export const DataProvider = ({ children }) => {
             setProfile(d.profile);
           }
           if (d.divisions) setDivisions(d.divisions);
-          if (d.periods) setPeriods(d.periods);
+
+          // Proteksi anti-overwrite untuk Kepengurusan (Periods)
+          if (d.periods && Array.isArray(d.periods) && !userModifiedCollections.current.has('periods')) {
+            const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_periods_user_edited') === 'true';
+            setPeriods((currentLocal) => {
+              const localHasCustomPhotos = Array.isArray(currentLocal) && currentLocal.some(
+                (p) => p?.groupPhotoUrl && (p.groupPhotoUrl.startsWith('data:image/') || p.groupPhotoUrl.length > 150)
+              );
+              if (localHasCustomPhotos || hasLocalEdits) {
+                syncToApi('periods', currentLocal);
+                return currentLocal;
+              }
+              return d.periods;
+            });
+          }
+
+          // Proteksi anti-overwrite untuk Anggota (Members)
           if (d.members && Array.isArray(d.members) && !userModifiedCollections.current.has('members')) {
             const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_members_user_edited') === 'true';
             setMembers((currentLocal) => {
@@ -403,13 +427,43 @@ export const DataProvider = ({ children }) => {
               return d.members;
             });
           }
+
           if (d.programs) setPrograms(d.programs);
           if (d.activities) setActivities(d.activities);
           if (d.act_regs) setActivityRegistrations(d.act_regs);
           if (d.mem_regs) setMemberRegistrations(d.mem_regs);
           if (d.news) setNews(d.news);
-          if (d.gallery) setGallery(d.gallery);
-          if (d.diklatsar) setDiklatsarEvents(d.diklatsar);
+
+          // Proteksi anti-overwrite untuk Galeri Media
+          if (d.gallery && Array.isArray(d.gallery) && !userModifiedCollections.current.has('gallery')) {
+            const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_gallery_user_edited') === 'true';
+            setGallery((currentLocal) => {
+              const localHasCustomPhotos = Array.isArray(currentLocal) && currentLocal.some(
+                (g) => g?.imageUrl && (g.imageUrl.startsWith('data:image/') || g.imageUrl.length > 150)
+              );
+              if (localHasCustomPhotos || hasLocalEdits) {
+                syncToApi('gallery', currentLocal);
+                return currentLocal;
+              }
+              return d.gallery;
+            });
+          }
+
+          // Proteksi anti-overwrite untuk DIKLATSAR & Galeri Kenangan Angkatan
+          if (d.diklatsar && Array.isArray(d.diklatsar) && !userModifiedCollections.current.has('diklatsar')) {
+            const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_diklatsar_user_edited') === 'true';
+            setDiklatsarEvents((currentLocal) => {
+              const localHasCustomPhotos = Array.isArray(currentLocal) && currentLocal.some(
+                (item) => (Array.isArray(item?.photos) && item.photos.length > 0) || (item?.coverImage && (item.coverImage.startsWith('data:image/') || item.coverImage.length > 150))
+              );
+              if (localHasCustomPhotos || hasLocalEdits) {
+                syncToApi('diklatsar', currentLocal);
+                return currentLocal;
+              }
+              return d.diklatsar;
+            });
+          }
+
           if (d.achievements) setAchievements(d.achievements);
           if (d.alumni) setAlumni(d.alumni);
           if (d.audit_logs) setAuditLogs(d.audit_logs);
@@ -423,7 +477,7 @@ export const DataProvider = ({ children }) => {
           // Tandai hidrasi selesai agar perubahan setelah ini disinkronkan ke server
           setTimeout(() => {
             isHydratedRef.current = true;
-          }, 100);
+          }, 150);
         }
       }
     }
@@ -448,11 +502,12 @@ export const DataProvider = ({ children }) => {
     } catch (e) {}
   }, []);
 
-  // Restorasi asinkron dari IndexedDB jika data atau foto di localStorage sempat terpotong
+  // Restorasi asinkron dari IndexedDB untuk SEMUA koleksi (kebal limit quota dan anti-reset)
   useEffect(() => {
     let active = true;
-    async function restoreFromIdb() {
+    async function restoreAllFromIdb() {
       try {
+        // 1. Members
         const idbMembers = await idbGet('mapakti_members');
         if (active && Array.isArray(idbMembers) && idbMembers.length > 0) {
           const idbHasPhotos = idbMembers.some((m) => m?.photoUrl && (m.photoUrl.startsWith('data:image/') || m.photoUrl.length > 150));
@@ -461,17 +516,92 @@ export const DataProvider = ({ children }) => {
           setMembers((prev) => {
             if (!Array.isArray(prev) || prev.length < idbMembers.length || idbHasPhotos || hasLocalEdits) {
               userModifiedCollections.current.add('members');
-              try {
-                localStorage.setItem('mapakti_members', JSON.stringify(idbMembers));
-              } catch (e) {}
               return idbMembers;
             }
             return prev;
           });
         }
-      } catch (e) {}
+
+        // 2. DIKLATSAR & Galeri Kenangan Angkatan
+        const idbDiklatsar = await idbGet('mapakti_diklatsar');
+        if (active && Array.isArray(idbDiklatsar) && idbDiklatsar.length > 0) {
+          const idbHasPhotos = idbDiklatsar.some((d) => 
+            (Array.isArray(d?.photos) && d.photos.length > 0) || 
+            (d?.coverImage && (d.coverImage.startsWith('data:image/') || d.coverImage.length > 150))
+          );
+          const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_diklatsar_user_edited') === 'true';
+
+          setDiklatsarEvents((prev) => {
+            if (!Array.isArray(prev) || prev.length < idbDiklatsar.length || idbHasPhotos || hasLocalEdits) {
+              userModifiedCollections.current.add('diklatsar');
+              return idbDiklatsar;
+            }
+            return prev;
+          });
+        }
+
+        // 3. Periods (Kepengurusan & Foto Bersama)
+        const idbPeriods = await idbGet('mapakti_periods');
+        if (active && Array.isArray(idbPeriods) && idbPeriods.length > 0) {
+          const idbHasPhotos = idbPeriods.some((p) => 
+            p?.groupPhotoUrl && (p.groupPhotoUrl.startsWith('data:image/') || p.groupPhotoUrl.length > 150)
+          );
+          const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_periods_user_edited') === 'true';
+
+          setPeriods((prev) => {
+            if (!Array.isArray(prev) || prev.length < idbPeriods.length || idbHasPhotos || hasLocalEdits) {
+              userModifiedCollections.current.add('periods');
+              return idbPeriods;
+            }
+            return prev;
+          });
+        }
+
+        // 4. Galeri Foto
+        const idbGallery = await idbGet('mapakti_gallery');
+        if (active && Array.isArray(idbGallery) && idbGallery.length > 0) {
+          const idbHasPhotos = idbGallery.some((g) => g?.imageUrl && (g.imageUrl.startsWith('data:image/') || g.imageUrl.length > 150));
+          const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_gallery_user_edited') === 'true';
+
+          setGallery((prev) => {
+            if (!Array.isArray(prev) || prev.length < idbGallery.length || idbHasPhotos || hasLocalEdits) {
+              userModifiedCollections.current.add('gallery');
+              return idbGallery;
+            }
+            return prev;
+          });
+        }
+
+        // 5. Profil & Kilas Sejarah
+        const idbProfile = await idbGet('mapakti_profile');
+        if (active && idbProfile && typeof idbProfile === 'object') {
+          const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_profile_user_edited') === 'true';
+          if (hasLocalEdits || idbProfile.historyHeadline) {
+            userModifiedCollections.current.add('profile');
+            setProfile(idbProfile);
+          }
+        }
+
+        // 6. Pengaturan Situs & Akun
+        const idbSettings = await idbGet('mapakti_settings');
+        if (active && idbSettings && typeof idbSettings === 'object') {
+          const hasLocalEdits = typeof window !== 'undefined' && localStorage.getItem('mapakti_settings_user_edited') === 'true';
+          if (hasLocalEdits || idbSettings.adminAccount?.isCustom) {
+            userModifiedCollections.current.add('settings');
+            setSettings(idbSettings);
+          }
+        }
+      } catch (e) {
+        console.warn('[MAPAKTI IDB] Restorasi gagal:', e);
+      } finally {
+        if (active) {
+          setTimeout(() => {
+            isHydratedRef.current = true;
+          }, 150);
+        }
+      }
     }
-    restoreFromIdb();
+    restoreAllFromIdb();
     return () => { active = false; };
   }, []);
 
@@ -753,6 +883,81 @@ export const DataProvider = ({ children }) => {
     });
   };
 
+  // Update and Persist DIKLATSAR & Galeri Kenangan Angkatan with Immediate Storage & Cloud Sync
+  const updateDiklatsar = (updater) => {
+    userModifiedCollections.current.add('diklatsar');
+    setDiklatsarEvents((prev) => {
+      const nextDiklatsar = typeof updater === 'function' ? updater(prev) : updater;
+      safeSetStorage('diklatsar', nextDiklatsar);
+      try {
+        localStorage.setItem('mapakti_diklatsar_user_edited', 'true');
+        localStorage.setItem('mapakti_diklatsar_updated_at', String(Date.now()));
+      } catch (e) {}
+      syncToApi('diklatsar', nextDiklatsar);
+      return nextDiklatsar;
+    });
+  };
+
+  // Update and Persist Periods (Kepengurusan & Foto Pengurus) with Immediate Storage & Cloud Sync
+  const updatePeriods = (updater) => {
+    userModifiedCollections.current.add('periods');
+    setPeriods((prev) => {
+      const nextPeriods = typeof updater === 'function' ? updater(prev) : updater;
+      safeSetStorage('periods', nextPeriods);
+      try {
+        localStorage.setItem('mapakti_periods_user_edited', 'true');
+        localStorage.setItem('mapakti_periods_updated_at', String(Date.now()));
+      } catch (e) {}
+      syncToApi('periods', nextPeriods);
+      return nextPeriods;
+    });
+  };
+
+  // Update and Persist Gallery with Immediate Storage & Cloud Sync
+  const updateGallery = (updater) => {
+    userModifiedCollections.current.add('gallery');
+    setGallery((prev) => {
+      const nextGallery = typeof updater === 'function' ? updater(prev) : updater;
+      safeSetStorage('gallery', nextGallery);
+      try {
+        localStorage.setItem('mapakti_gallery_user_edited', 'true');
+        localStorage.setItem('mapakti_gallery_updated_at', String(Date.now()));
+      } catch (e) {}
+      syncToApi('gallery', nextGallery);
+      return nextGallery;
+    });
+  };
+
+  // Update and Persist Profile & Kilas Sejarah with Immediate Storage & Cloud Sync
+  const updateProfile = (updater) => {
+    userModifiedCollections.current.add('profile');
+    setProfile((prev) => {
+      const nextProfile = typeof updater === 'function' ? updater(prev) : updater;
+      safeSetStorage('profile', nextProfile);
+      try {
+        localStorage.setItem('mapakti_profile_user_edited', 'true');
+        localStorage.setItem('mapakti_profile_updated_at', String(Date.now()));
+      } catch (e) {}
+      syncToApi('profile', nextProfile);
+      return nextProfile;
+    });
+  };
+
+  // Update and Persist Settings with Immediate Storage & Cloud Sync
+  const updateSettings = (updater) => {
+    userModifiedCollections.current.add('settings');
+    setSettings((prev) => {
+      const nextSettings = typeof updater === 'function' ? updater(prev) : updater;
+      safeSetStorage('settings', nextSettings);
+      try {
+        localStorage.setItem('mapakti_settings_user_edited', 'true');
+        localStorage.setItem('mapakti_settings_updated_at', String(Date.now()));
+      } catch (e) {}
+      syncToApi('settings', nextSettings);
+      return nextSettings;
+    });
+  };
+
   // Privacy toggles (FR-04, FR-13)
   const toggleMemberPublish = (memberId) => {
     updateMembers((prev) =>
@@ -982,19 +1187,19 @@ export const DataProvider = ({ children }) => {
   return (
     <DataContext.Provider
       value={{
-        // Data Entities
-        settings, setSettings,
-        profile, setProfile,
+        // Data Entities & Direct Updaters
+        settings, setSettings, updateSettings,
+        profile, setProfile, updateProfile,
         divisions, setDivisions,
-        periods, setPeriods,
+        periods, setPeriods, updatePeriods,
         members, setMembers, updateMembers,
         programs, setPrograms,
         activities, setActivities,
         activityRegistrations, setActivityRegistrations,
         memberRegistrations, setMemberRegistrations,
         news, setNews,
-        gallery, setGallery,
-        diklatsarEvents, setDiklatsarEvents,
+        gallery, setGallery, updateGallery,
+        diklatsarEvents, setDiklatsarEvents, updateDiklatsar,
         achievements, setAchievements,
         alumni, setAlumni,
         auditLogs, setAuditLogs,

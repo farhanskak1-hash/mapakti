@@ -17,7 +17,7 @@ import {
  * Uses URL.createObjectURL for memory efficiency, supporting large files (5MB - 50MB+).
  * Directly produces an ultra-lightweight DataURL (Base64 JPEG) stored inside the database JSON.
  */
-export const compressImageFile = (file, maxWidth = 1920, maxHeight = 1200, quality = 0.88) => {
+export const compressImageFile = (file, maxWidth = 1440, maxHeight = 960, quality = 0.84) => {
   return new Promise((resolve, reject) => {
     if (!file) return reject(new Error('Tidak ada berkas yang dipilih'));
 
@@ -178,16 +178,16 @@ export const ImageUploadInput = ({
   hint = 'Mendukung upload langsung foto ukuran bebas > 5MB hingga 50MB (JPG, PNG, WebP) atau link gambar dari internet',
   aspectRatio = 'aspect-video', // e.g. aspect-square, aspect-video, aspect-[4/5]
   required = false,
-  maxWidth = 1920,
-  maxHeight = 1200,
-  quality = 0.88,
+  maxWidth = 1440,
+  maxHeight = 960,
+  quality = 0.84,
   isGroupPhoto = false
 }) => {
   const isBase64 = value && value.startsWith('data:image/');
   const isHttpUrl = value && (value.startsWith('http://') || value.startsWith('https://'));
 
   const [activeTab, setActiveTab] = useState(isHttpUrl ? 'url' : 'upload'); // 'upload' | 'url'
-  const [resolutionMode, setResolutionMode] = useState(isGroupPhoto || maxWidth >= 1600 ? 'hd' : 'standard'); // 'hd' | 'standard'
+  const [resolutionMode, setResolutionMode] = useState(isGroupPhoto || maxWidth >= 1200 ? 'hd' : 'standard'); // 'hd' | 'standard'
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingNote, setProcessingNote] = useState('');
   const [uploadStats, setUploadStats] = useState(null);
@@ -207,14 +207,14 @@ export const ImageUploadInput = ({
     const originalMb = (file.size / (1024 * 1024)).toFixed(1);
     setProcessingNote(
       file.size > 2 * 1024 * 1024
-        ? `Mengoptimasi foto resolusi tinggi (${originalMb} MB) ke kualitas Full HD...`
+        ? `Mengoptimasi foto resolusi tinggi (${originalMb} MB) ke kualitas Full HD hemat memori...`
         : 'Memproses foto ke kualitas HD tajam...'
     );
 
     try {
-      const activeMaxWidth = resolutionMode === 'hd' ? Math.max(maxWidth, 1920) : 1000;
-      const activeMaxHeight = resolutionMode === 'hd' ? Math.max(maxHeight, 1200) : 800;
-      const activeQuality = resolutionMode === 'hd' ? Math.max(quality, 0.88) : 0.80;
+      const activeMaxWidth = resolutionMode === 'hd' ? Math.max(maxWidth, 1440) : 800;
+      const activeMaxHeight = resolutionMode === 'hd' ? Math.max(maxHeight, 960) : 600;
+      const activeQuality = resolutionMode === 'hd' ? Math.min(Math.max(quality, 0.82), 0.86) : 0.78;
 
       const result = await compressImageFile(file, activeMaxWidth, activeMaxHeight, activeQuality);
       const url = typeof result === 'string' ? result : result.dataUrl;

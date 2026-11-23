@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 export const AdminDiklatsar = () => {
-  const { diklatsarEvents, setDiklatsarEvents, selectedDiklatsar, setSelectedDiklatsar, addAuditLog, addToast } = useData();
+  const { diklatsarEvents, setDiklatsarEvents, updateDiklatsar, selectedDiklatsar, setSelectedDiklatsar, addAuditLog, addToast } = useData();
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [activeTab, setActiveTab] = useState('info'); // 'info' | 'photos'
@@ -84,7 +84,7 @@ export const AdminDiklatsar = () => {
 
     for (const file of files) {
       try {
-        const { dataUrl } = await compressImageFile(file, 1920, 1200, 0.90);
+        const { dataUrl } = await compressImageFile(file, 1440, 960, 0.84);
         addedPhotos.push(dataUrl);
       } catch (err) {
         console.error('Gagal memproses gambar:', err);
@@ -173,14 +173,14 @@ export const AdminDiklatsar = () => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const cleanData = {
       ...formData,
       photos: Array.isArray(formData.photos) ? formData.photos : []
     };
 
     if (editingItem) {
-      setDiklatsarEvents((prev) =>
+      updateDiklatsar((prev) =>
         prev.map((d) => (d.id === editingItem.id ? { ...d, ...cleanData } : d))
       );
       if (selectedDiklatsar?.id === editingItem.id) {
@@ -194,7 +194,7 @@ export const AdminDiklatsar = () => {
       });
     } else {
       const newItem = { id: `dks-${Date.now()}`, ...cleanData };
-      setDiklatsarEvents((prev) => [newItem, ...prev]);
+      updateDiklatsar((prev) => [newItem, ...prev]);
       addAuditLog('CREATE', 'DIKLATSAR', `Menambahkan arsip DIKLATSAR: ${cleanData.batchName}`);
       addToast({
         type: 'success',
@@ -207,7 +207,7 @@ export const AdminDiklatsar = () => {
 
   const handleDelete = (id, name) => {
     if (window.confirm(`Hapus catatan angkatan ${name}?`)) {
-      setDiklatsarEvents((prev) => prev.filter((d) => d.id !== id));
+      updateDiklatsar((prev) => prev.filter((d) => d.id !== id));
       if (selectedDiklatsar?.id === id) {
         setSelectedDiklatsar(null);
       }
@@ -573,16 +573,27 @@ export const AdminDiklatsar = () => {
                       </span>
                     </div>
 
-                    {formData.photos && formData.photos.length > 1 && (
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={handleClearAllPhotos}
-                        className="text-[11px] text-rose-400 hover:text-rose-300 font-medium flex items-center gap-1 cursor-pointer"
+                        onClick={handleSubmit}
+                        className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                        title="Simpan foto yang baru diunggah langsung ke database"
                       >
-                        <Trash2 className="w-3 h-3" />
-                        <span>Kosongkan Semua</span>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Simpan Galeri</span>
                       </button>
-                    )}
+                      {formData.photos && formData.photos.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={handleClearAllPhotos}
+                          className="text-[11px] text-rose-400 hover:text-rose-300 font-medium flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Kosongkan</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Photos Grid List */}
