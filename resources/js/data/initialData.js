@@ -734,6 +734,34 @@ export const initialGallery = [
 export const initialDiklatsarEvents = [
   // Sesuai FR-11: Sejarah dan dokumentasi foto DIKLATSAR
   {
+    id: 'dks-26',
+    batchNumber: 'XXVI',
+    batchName: 'Angkatan Darpa Anargya',
+    year: '2025',
+    location: 'Lereng Gunung Slamet',
+    graduatedCount: 13,
+    historyNotes: 'DARPA ANARGYA merupakan nama Angkatan XXVI UKM MAPAKTI yang memiliki arti Kebanggaan yang Tak Terhingga Nilainya. Nama ini menjadi identitas sekaligus simbol kebanggaan atas perjalanan, perjuangan, dan ikatan persaudaraan yang terjalin, serta pengingat untuk terus menjaga nilai-nilai kepecintaalaman dalam keluarga besar MAPAKTI.',
+    coverImage: 'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80'
+    ]
+  },
+  {
+    id: 'dks-25',
+    batchNumber: 'XXV',
+    batchName: 'Angkatan Surya Rimba',
+    year: '2024',
+    location: 'Hutan Wisata Guci & Lereng Slamet',
+    graduatedCount: 20,
+    historyNotes: 'Pendidikan dasar pengembaraan rimba dan pendakian orientasi navigasi darat dengan rute pengembaraan sepanjang 40 kilometer melintasi jalur punggungan.',
+    coverImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+    photos: [
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1522163182402-834f871fd851?auto=format&fit=crop&w=800&q=80'
+    ]
+  },
+  {
     id: 'dks-24',
     batchNumber: 'XXIV',
     batchName: 'Angkatan Kabut Lembah',

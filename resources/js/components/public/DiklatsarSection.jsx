@@ -59,6 +59,12 @@ export const DiklatsarSection = () => {
                 <div className="absolute top-3 left-3 px-3 py-1 rounded-xl bg-[#F5C400] text-[#102A56] text-xs font-black">
                   DIKSAR {diksar.batchNumber}
                 </div>
+                {diksar.photos && diksar.photos.length > 0 && (
+                  <span className="absolute bottom-3 right-3 px-2.5 py-1 rounded-xl bg-black/75 backdrop-blur-sm text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700/60">
+                    <Camera className="w-3.5 h-3.5 text-[#F5C400]" />
+                    <span>{diksar.photos.length} Foto</span>
+                  </span>
+                )}
               </div>
 
               <div className="px-5 space-y-2">

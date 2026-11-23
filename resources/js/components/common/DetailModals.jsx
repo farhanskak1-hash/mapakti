@@ -18,7 +18,8 @@ import {
   Clock, 
   DollarSign, 
   Sparkles,
-  Share2
+  Share2,
+  ZoomIn
 } from 'lucide-react';
 
 export const DetailModals = () => {
@@ -464,14 +465,41 @@ export const DetailModals = () => {
 
               {selectedDiklatsar.photos && selectedDiklatsar.photos.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <Camera className="w-3.5 h-3.5 text-[#F5C400]" />
-                    Galeri Kenangan Angkatan
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <Camera className="w-3.5 h-3.5 text-[#F5C400]" />
+                      Galeri Kenangan Angkatan
+                    </h4>
+                    <span className="text-[11px] text-slate-400 font-medium bg-slate-800/80 px-2 py-0.5 rounded-full border border-slate-700/50">
+                      {selectedDiklatsar.photos.length} Foto Tersimpan
+                    </span>
+                  </div>
+                  <div className={`grid gap-3 ${selectedDiklatsar.photos.length === 1 ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3'}`}>
                     {selectedDiklatsar.photos.map((photo, i) => (
-                      <div key={i} className="aspect-video rounded-xl overflow-hidden border border-slate-800 bg-black">
-                        <img src={photo} alt="Foto Angkatan" className="w-full h-full object-cover" />
+                      <div
+                        key={i}
+                        onClick={() =>
+                          setLightboxImage({
+                            imageUrl: photo,
+                            title: `Galeri Kenangan ${selectedDiklatsar.batchName} (${i + 1}/${selectedDiklatsar.photos.length})`
+                          })
+                        }
+                        className="group relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-black cursor-pointer hover:border-[#F5C400]/70 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+                        title="Klik untuk melihat foto resolusi penuh"
+                      >
+                        <img
+                          src={photo}
+                          alt={`Foto Kenangan ${selectedDiklatsar.batchName} ${i + 1}`}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 backdrop-blur-[1px]">
+                          <ZoomIn className="w-4 h-4 text-[#F5C400]" />
+                          <span className="text-[11px] font-bold text-white drop-shadow">Perbesar</span>
+                        </div>
+                        <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/75 text-[10px] font-bold text-slate-200 backdrop-blur-xs">
+                          #{i + 1}
+                        </span>
                       </div>
                     ))}
                   </div>

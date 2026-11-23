@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
-import { Users, ShieldCheck, Award, Calendar, ChevronRight, Camera } from 'lucide-react';
+import { Users, ShieldCheck, Award, Calendar, ChevronRight, Camera, Maximize2 } from 'lucide-react';
 
 export const ManagementSection = () => {
-  const { periods } = useData();
+  const { periods, setLightboxImage } = useData();
   const [selectedPeriodId, setSelectedPeriodId] = useState(() => {
     const active = periods.find((p) => p.status === 'Aktif');
     return active ? active.id : periods[0]?.id || '';
@@ -101,18 +101,32 @@ export const ManagementSection = () => {
             </div>
           </div>
 
-          {/* Group Photo (if available) */}
+          {/* Group Photo Showcase (Resolusi Full HD & Zoom Lightbox) */}
           {activePeriod.groupPhotoUrl && (
-            <div className="relative rounded-3xl overflow-hidden max-h-80 border border-slate-800 group shadow-2xl">
-              <img
-                src={activePeriod.groupPhotoUrl}
-                alt={`Foto Pengurus ${activePeriod.name}`}
-                className="w-full h-full object-cover max-h-80 group-hover:scale-102 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent flex items-end p-6">
-                <div className="flex items-center gap-2 text-xs font-bold text-white">
+            <div
+              onClick={() => setLightboxImage && setLightboxImage(activePeriod.groupPhotoUrl)}
+              className="relative rounded-3xl overflow-hidden border border-slate-800 group shadow-2xl cursor-pointer bg-slate-950"
+              title="Klik untuk melihat foto dalam ukuran penuh / HD"
+            >
+              <div className="w-full flex items-center justify-center bg-slate-950">
+                <img
+                  src={activePeriod.groupPhotoUrl}
+                  alt={`Foto Bersama Dewan Pengurus ${activePeriod.name}`}
+                  className="w-full h-auto max-h-[560px] object-contain sm:object-cover group-hover:scale-[1.01] transition-transform duration-700"
+                  loading="eager"
+                />
+              </div>
+
+              {/* Overlay Label & Zoom Indicator */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex items-end justify-between p-4 sm:p-6 pointer-events-none">
+                <div className="flex items-center gap-2 text-xs font-bold text-white bg-slate-900/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-700/80 shadow-lg">
                   <Camera className="w-4 h-4 text-[#F5C400]" />
                   <span>Foto Bersama Dewan Pengurus {activePeriod.name}</span>
+                </div>
+
+                <div className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-[#F5C400] bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-[#F5C400]/40 shadow-lg group-hover:bg-[#F5C400] group-hover:text-[#102A56] transition-colors pointer-events-auto">
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  <span>Perbesar HD</span>
                 </div>
               </div>
             </div>

@@ -420,16 +420,21 @@ export const AdminPeriods = () => {
 
           {/* Group Photo Showcase (if exists) */}
           {activePeriod.groupPhotoUrl && (
-            <div className="relative rounded-2xl overflow-hidden max-h-64 border border-slate-800 group">
-              <img
-                src={activePeriod.groupPhotoUrl}
-                alt={`Foto Bersama ${activePeriod.name}`}
-                className="w-full h-full object-cover max-h-64"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex items-end p-4">
-                <span className="text-xs font-bold text-white flex items-center gap-2">
+            <div className="relative rounded-2xl overflow-hidden border border-slate-800 group shadow-xl bg-slate-950">
+              <div className="w-full flex items-center justify-center bg-slate-950">
+                <img
+                  src={activePeriod.groupPhotoUrl}
+                  alt={`Foto Bersama ${activePeriod.name}`}
+                  className="w-full h-auto max-h-[460px] object-contain sm:object-cover"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex items-end justify-between p-4 pointer-events-none">
+                <span className="text-xs font-bold text-white flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-700">
                   <Camera className="w-4 h-4 text-[#F5C400]" />
                   Dokumentasi Foto Bersama Pengurus {activePeriod.name}
+                </span>
+                <span className="text-[10px] font-bold text-emerald-400 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-emerald-500/30">
+                  Resolusi Full HD
                 </span>
               </div>
             </div>
@@ -649,14 +654,18 @@ export const AdminPeriods = () => {
                 />
               </div>
 
-              {/* Upload Foto Bersama Periode via Button */}
+              {/* Upload Foto Bersama Periode via Button (Resolusi Tinggi Full HD) */}
               <div className="pt-2 border-t border-slate-800">
                 <ImageUploadInput
                   value={periodForm.groupPhotoUrl}
                   onChange={(url) => setPeriodForm({ ...periodForm, groupPhotoUrl: url })}
-                  label="Foto Bersama / Pelantikan Pengurus Periode (Opsional)"
-                  hint="Unggah foto bersama seluruh dewan pengurus periode ini"
+                  label="Foto Bersama Seluruh Pengurus (Landscape Full HD)"
+                  hint="Unggah foto bersama dewan pengurus resolusi tinggi (Sistem otomatis memproses Full HD 1080p / 1920px agar sangat tajam dan tidak pecah)"
                   aspectRatio="aspect-video"
+                  maxWidth={1920}
+                  maxHeight={1200}
+                  quality={0.90}
+                  isGroupPhoto={true}
                 />
               </div>
 

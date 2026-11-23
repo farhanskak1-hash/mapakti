@@ -17,7 +17,7 @@ import {
  * Uses URL.createObjectURL for memory efficiency, supporting large files (5MB - 50MB+).
  * Directly produces an ultra-lightweight DataURL (Base64 JPEG) stored inside the database JSON.
  */
-export const compressImageFile = (file, maxWidth = 800, maxHeight = 800, quality = 0.78) => {
+export const compressImageFile = (file, maxWidth = 1920, maxHeight = 1200, quality = 0.88) => {
   return new Promise((resolve, reject) => {
     if (!file) return reject(new Error('Tidak ada berkas yang dipilih'));
 
@@ -93,8 +93,9 @@ export const compressImageFile = (file, maxWidth = 800, maxHeight = 800, quality
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Ekspor ke JPEG berkualitas tajam namun sangat hemat byte (< 50KB)
-        const dataUrl = canvas.toDataURL('image/jpeg', Math.min(quality || 0.78, 0.85));
+        // Ekspor ke JPEG berkualitas tajam Full HD (0.88 - 0.94)
+        const targetQuality = Math.min(Math.max(quality || 0.88, 0.70), 0.94);
+        const dataUrl = canvas.toDataURL('image/jpeg', targetQuality);
 
         cleanup();
 
@@ -137,7 +138,8 @@ export const compressImageFile = (file, maxWidth = 800, maxHeight = 800, quality
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, width, height);
             ctx.drawImage(fallbackImg, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+            const targetQuality = Math.min(Math.max(quality || 0.88, 0.70), 0.94);
+            const dataUrl = canvas.toDataURL('image/jpeg', targetQuality);
             resolve({
               dataUrl,
               originalBytes: file.size,
@@ -176,14 +178,16 @@ export const ImageUploadInput = ({
   hint = 'Mendukung upload langsung foto ukuran bebas > 5MB hingga 50MB (JPG, PNG, WebP) atau link gambar dari internet',
   aspectRatio = 'aspect-video', // e.g. aspect-square, aspect-video, aspect-[4/5]
   required = false,
-  maxWidth = 800,
-  maxHeight = 800,
-  quality = 0.78
+  maxWidth = 1920,
+  maxHeight = 1200,
+  quality = 0.88,
+  isGroupPhoto = false
 }) => {
   const isBase64 = value && value.startsWith('data:image/');
   const isHttpUrl = value && (value.startsWith('http://') || value.startsWith('https://'));
 
   const [activeTab, setActiveTab] = useState(isHttpUrl ? 'url' : 'upload'); // 'upload' | 'url'
+  const [resolutionMode, setResolutionMode] = useState(isGroupPhoto || maxWidth >= 1600 ? 'hd' : 'standard'); // 'hd' | 'standard'
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingNote, setProcessingNote] = useState('');
   const [uploadStats, setUploadStats] = useState(null);
@@ -203,12 +207,16 @@ export const ImageUploadInput = ({
     const originalMb = (file.size / (1024 * 1024)).toFixed(1);
     setProcessingNote(
       file.size > 2 * 1024 * 1024
-        ? `Mengoptimasi foto kamera/resolusi tinggi (${originalMb} MB)...`
-        : 'Mengompresi foto...'
+        ? `Mengoptimasi foto resolusi tinggi (${originalMb} MB) ke kualitas Full HD...`
+        : 'Memproses foto ke kualitas HD tajam...'
     );
 
     try {
-      const result = await compressImageFile(file, maxWidth, maxHeight, quality);
+      const activeMaxWidth = resolutionMode === 'hd' ? Math.max(maxWidth, 1920) : 1000;
+      const activeMaxHeight = resolutionMode === 'hd' ? Math.max(maxHeight, 1200) : 800;
+      const activeQuality = resolutionMode === 'hd' ? Math.max(quality, 0.88) : 0.80;
+
+      const result = await compressImageFile(file, activeMaxWidth, activeMaxHeight, activeQuality);
       const url = typeof result === 'string' ? result : result.dataUrl;
 
       const origSizeStr =
@@ -223,7 +231,10 @@ export const ImageUploadInput = ({
       setUploadStats({
         name: file.name,
         original: origSizeStr,
-        compressed: compSizeStr
+        compressed: compSizeStr,
+        width: result.width,
+        height: result.height,
+        isHd: (result.width || 0) >= 1200
       });
 
       if (onChange) onChange(url);
@@ -286,6 +297,39 @@ export const ImageUploadInput = ({
         </div>
       </div>
 
+      {activeTab === 'upload' && (
+        <div className="flex flex-wrap items-center justify-between text-xs py-1 px-1 gap-2">
+          <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-[#F5C400]" />
+            <span>Kualitas Gambar:</span>
+          </span>
+          <div className="inline-flex rounded-lg bg-slate-900 border border-slate-800 p-0.5">
+            <button
+              type="button"
+              onClick={() => setResolutionMode('hd')}
+              className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
+                resolutionMode === 'hd'
+                  ? 'bg-[#F5C400] text-[#102A56] shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>Full HD 1080p (Tajam & Tidak Pecah)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setResolutionMode('standard')}
+              className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                resolutionMode === 'standard'
+                  ? 'bg-[#102A56] text-[#F5C400] shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>Standar (1000px)</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'upload' ? (
         <div>
           <input
@@ -298,11 +342,11 @@ export const ImageUploadInput = ({
 
           {value ? (
             <div className="relative group rounded-2xl overflow-hidden border border-slate-700 bg-slate-950">
-              <div className={`${aspectRatio} w-full max-h-56 bg-slate-950 flex items-center justify-center overflow-hidden`}>
+              <div className={`${aspectRatio} w-full max-h-80 bg-slate-950 flex items-center justify-center overflow-hidden`}>
                 <img
                   src={value}
                   alt="Preview"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain sm:object-cover"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=600&q=80';
@@ -336,8 +380,9 @@ export const ImageUploadInput = ({
                     <CheckCircle2 className="w-3.5 h-3.5" /> Foto Siap Digunakan
                   </span>
                   {uploadStats && (
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700/60 text-[10px] font-bold">
-                      {uploadStats.original} ➔ {uploadStats.compressed} (Super Tajam & Hemat)
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700/60 text-[10px] font-bold flex items-center gap-1">
+                      <Sparkles className="w-2.5 h-2.5 text-[#F5C400]" />
+                      <span>{uploadStats.isHd ? 'Full HD 1080p' : 'Standar'} ({uploadStats.width}×{uploadStats.height}px • {uploadStats.compressed})</span>
                     </span>
                   )}
                   {isBase64 && !uploadStats && (
